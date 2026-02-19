@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="@color/rose_clair">
+    <TableRow
+        android:layout_height="wrap_content"
+        android:layout_width="match_parent">
+
+        <TextView
+            android:id="@+id/textTemps"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginTop="50dp"
+            android:layout_marginLeft="15dp"
+            android:text="Temps écoulé :"
+            android:textSize="16sp"/>
+
+         <TextView
+             android:id="@+id/textMode"
+             android:layout_width="0dp"
+             android:layout_height="wrap_content"
+             android:layout_weight="1"
+             android:layout_marginTop="50dp"
+             android:layout_marginRight="15dp"
+             android:gravity="end"
+             android:text="Mode :"
+             android:textSize="16sp" />
+
+    </TableRow>
+
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:paddingTop="16dp"
+        android:paddingBottom="16dp">
+
+
+        <TextView
+            android:id="@+id/textScore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Score :"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:padding="16dp" />
+    </TableRow>
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:id="@+id/jeu"
+            android:layout_width="300dp"
+            android:layout_height="400dp"
+            android:layout_margin="50dp"
+            android:background="#FFFFFF"
+            android:padding="8dp"/>
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="70dp">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    </TableRow>
+
+</TableLayout>
