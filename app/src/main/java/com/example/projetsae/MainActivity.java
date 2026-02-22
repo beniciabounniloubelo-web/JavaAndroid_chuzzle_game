@@ -2,6 +2,8 @@ package com.example.projetsae;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.ImageView;
 import android.widget.TableLayout;
 import android.widget.TableRow;
@@ -15,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     private GameModel model;
     private TableLayout table;
 
+    private float debutX, debutY;
     private int[] images = {
             R.drawable.c1,
             R.drawable.c2,
@@ -31,7 +34,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         model = new GameModel();
         table = findViewById(R.id.table);
-        Log.d("DEBUG", "table = " + table);
 
         afficherGrille();
         table.requestLayout();
@@ -50,7 +52,38 @@ public class MainActivity extends AppCompatActivity {
                 ImageView img = new ImageView(this);
                 img.setImageResource(images[model.getCase(i, j)]);
                 img.setLayoutParams(new TableRow.LayoutParams(150, 150));
+                final int ligne = i;
+                final int colonne = j;
 
+                img.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View v, MotionEvent event) {
+
+                        switch (event.getAction()) {
+
+                            case MotionEvent.ACTION_DOWN:
+                                debutX = event.getX();
+                                debutY = event.getY();
+                                return true;
+
+                            case MotionEvent.ACTION_UP:
+                                float dx = event.getX() - debutX;
+                                float dy = event.getY() - debutY;
+
+                                if (Math.abs(dx) > Math.abs(dy)) {
+                                    model.decalerLigneDroite(ligne);
+                                }
+                                else if (Math.abs(dy) > Math.abs(dx)){
+                                    model.decalerColonneBas(colonne);
+                                }
+
+                                v.performClick();
+                                afficherGrille();
+                                return true;
+                        }
+                        return false;
+                    }
+                });
                 row.addView(img);
             }
 
