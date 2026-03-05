@@ -1,76 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:background="@color/rose_clair">
-    <TableRow
+    android:background="@color/rose_clair"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <!-- Grille principale -->
+    <TableLayout
+        android:id="@+id/table"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_width="match_parent">
+        android:layout_centerInParent="true"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:padding="8dp"/>
 
-        <TextView
-            android:id="@+id/textTemps"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginTop="50dp"
-            android:layout_marginLeft="15dp"
-            android:text="Temps écoulé :"
-            android:textSize="16sp"/>
-
-         <TextView
-             android:id="@+id/textMode"
-             android:layout_width="0dp"
-             android:layout_height="wrap_content"
-             android:layout_weight="1"
-             android:layout_marginTop="50dp"
-             android:layout_marginRight="15dp"
-             android:gravity="end"
-             android:text="Mode :"
-             android:textSize="16sp" />
-
-    </TableRow>
-
-
-    <TableRow
-        android:layout_width="match_parent"
+    <!-- Overlay pour drag -->
+    <LinearLayout
+        android:id="@+id/overlay"
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp">
-
-
-        <TextView
-            android:id="@+id/textScore"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Score :"
-            android:layout_gravity="center"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:padding="16dp" />
-    </TableRow>
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <TableLayout
-            android:id="@+id/table"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="50dp"
-            android:padding="8dp"/>
-    </TableRow>
-
-    <TableRow
-        android:layout_width="match_parent"
-        android:layout_height="70dp">
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
-    </TableRow>
-
-</TableLayout>
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:visibility="gone"/>
+</RelativeLayout>
