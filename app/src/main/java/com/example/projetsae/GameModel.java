@@ -75,5 +75,19 @@ public class GameModel {
 
             grille[0][colonne] = temp;
         }
+
+        public void decalerLigneGauche(int ligne) {
+            int temp = grille[ligne][0];
+            for (int j = 0; j < 5; j++)
+                grille[ligne][j] = grille[ligne][j + 1];
+            grille[ligne][5] = temp;
+        }
+
+        public void decalerColonneHaut(int colonne) {
+            int temp = grille[0][colonne];
+            for (int i = 0; i < 5; i++)
+                grille[i][colonne] = grille[i + 1][colonne];
+            grille[5][colonne] = temp;
+        }
     }
 
