@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private float debutX, debutY;
     private boolean modeHorizontal;
 
+    private final int SEUIL = 25;
     private int ligneSelectionnee;
     private int colonneSelectionnee;
 
@@ -101,6 +102,16 @@ public class MainActivity extends AppCompatActivity {
                                 float diffY = event.getRawY() - debutY;
 
                                 if (overlay.getVisibility() == View.GONE) {
+
+                                    if (Math.abs(diffX) > SEUIL || Math.abs(diffY) > SEUIL) {
+
+                                        if (Math.abs(diffX) > Math.abs(diffY)) {
+                                            modeHorizontal = true;
+                                        } else {
+                                            modeHorizontal = false;
+                                        }
+                                        }
+
                                     creerOverlay();
                                 }
 
@@ -151,6 +162,8 @@ public class MainActivity extends AppCompatActivity {
                                 overlay.removeAllViews();
                                 overlay.setTranslationX(0);
                                 overlay.setTranslationY(0);
+
+                                modeHorizontal = false;
 
                                 enDrag = false;
                                 afficherGrille();
@@ -237,7 +250,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        ajouterScore(scoreGagne);
+        // ajouterScore(scoreGagne);
         return scoreGagne;
     }
 
@@ -264,6 +277,20 @@ public class MainActivity extends AppCompatActivity {
             overlay.setOrientation(LinearLayout.HORIZONTAL);
 
             TableRow row = (TableRow) table.getChildAt(ligneSelectionnee);
+
+            View firstCell = row.getChildAt(0);
+
+            int[] loc = new int[2];
+            firstCell.getLocationOnScreen(loc);
+
+            int[] tablePos = new int[2];
+            table.getLocationOnScreen(tablePos);
+
+            float posX = tablePos[0] - loc[0];
+            float posY = loc[1];
+
+            overlay.setX(posX);
+            overlay.setY(posY);
 
             for (int j = 0; j < row.getChildCount(); j++) {
 
