@@ -26,13 +26,7 @@ public class MainActivity extends AppCompatActivity {
     private LinearLayout overlay;
     private boolean enDrag = false;
     private int CELL_SIZE;
-    private int SEUIL =  20;
     private float debutX, debutY;
-
-    private float dernierX = 0;
-    private float dernierY = 0;
-
-    private boolean directionChoisie = false;
     private boolean modeHorizontal;
 
     private int ligneSelectionnee;
@@ -162,9 +156,9 @@ public class MainActivity extends AppCompatActivity {
                                 afficherGrille();
 
                                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    verifierAlignements();
+                                    int scoreGagne = verifierAlignements();
                                     afficherGrille();
-                                }, 200);
+                                }, 2000);
 
 
 
@@ -182,82 +176,74 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    private void verifierAlignements() {
-
+    private int verifierAlignements() {
+        int scoreGagne = 0;
         boolean[][] aSupprimer = new boolean[6][6];
 
-        // vérifier lignes
+        // 1) détecter alignements horizontaux
         for (int i = 0; i < 6; i++) {
-
-            int compteur = 1;
-
+            int count = 1;
             for (int j = 1; j < 6; j++) {
-
                 if (model.getCase(i,j) == model.getCase(i,j-1)) {
-                    compteur++;
+                    count++;
                 } else {
-
-                    if (compteur >= 3) {
-
-                        for (int k = 0; k < compteur; k++) {
-                            aSupprimer[i][j-1-k] = true;
-                        }
-
-                        ajouterScore(compteur);
+                    if (count >= 3) {
+                        for (int k = 0; k < count; k++) aSupprimer[i][j-1-k] = true;
+                        ajouterScore(count);
                     }
-
-                    compteur = 1;
+                    count = 1;
                 }
             }
-
-            if (compteur >= 3) {
-
-                for (int k = 0; k < compteur; k++) {
-                    aSupprimer[i][5-k] = true;
-                }
-
-                ajouterScore(compteur);
+            if (count >= 3) {
+                for (int k = 0; k < count; k++) aSupprimer[i][6-1-k] = true;
+                ajouterScore(count);
             }
         }
 
-
-        // vérifier colonnes
+        // 2) détecter alignements verticaux
         for (int j = 0; j < 6; j++) {
-
-            int compteur = 1;
-
+            int count = 1;
             for (int i = 1; i < 6; i++) {
-
                 if (model.getCase(i,j) == model.getCase(i-1,j)) {
-                    compteur++;
+                    count++;
                 } else {
-
-                    if (compteur >= 3) {
-
-                        for (int k = 0; k < compteur; k++) {
-                            aSupprimer[i-1-k][j] = true;
-                        }
-
-                        ajouterScore(compteur);
+                    if (count >= 3) {
+                        for (int k = 0; k < count; k++) aSupprimer[i-1-k][j] = true;
+                        ajouterScore(count);
                     }
-
-                    compteur = 1;
+                    count = 1;
                 }
             }
-
-            if (compteur >= 3) {
-
-                for (int k = 0; k < compteur; k++) {
-                    aSupprimer[5-k][j] = true;
-                }
-
-                ajouterScore(compteur);
+            if (count >= 3) {
+                for (int k = 0; k < count; k++) aSupprimer[6-1-k][j] = true;
+                ajouterScore(count);
             }
         }
 
-        remplacerCases(aSupprimer);
+        // 3) faire tomber les cases et remplir les vides
+        Random rand = new Random();
+        for (int j = 0; j < 6; j++) {
+            int vide = 0;
+            for (int i = 5; i >= 0; i--) {
+                if (aSupprimer[i][j]) {
+                    vide++;
+                } else if (vide > 0) {
+                    model.setCase(i+vide, j, model.getCase(i,j));
+                }
+            }
+            // nouvelles cases en haut
+            for (int i = 0; i < vide; i++) {
+                model.setCase(i, j, rand.nextInt(7));
+            }
+        }
+
+        ajouterScore(scoreGagne);
+        return scoreGagne;
     }
+
+
+
+
 
     private void ajouterScore(int nb) {
 
@@ -269,21 +255,6 @@ public class MainActivity extends AppCompatActivity {
         score.setText("Score : " + le_score);
     }
 
-    private void remplacerCases(boolean[][] aSupprimer) {
-
-        Random rand = new Random();
-
-        for (int i = 0; i < 6; i++) {
-            for (int j = 0; j < 6; j++) {
-
-                if (aSupprimer[i][j]) {
-
-                    int nouvelle = rand.nextInt(7);
-                    model.setCase(i,j,nouvelle);
-                }
-            }
-        }
-    }
     private void creerOverlay() {
 
         overlay.removeAllViews();
@@ -349,19 +320,5 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void resetTranslations() {
-
-        for (int i = 0; i < table.getChildCount(); i++) {
-
-            TableRow row = (TableRow) table.getChildAt(i);
-
-            row.setTranslationX(0);
-
-            for (int j = 0; j < row.getChildCount(); j++) {
-                View cell = row.getChildAt(j);
-                cell.setTranslationY(0);
-            }
-        }
-    }
 
 }
