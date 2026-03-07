@@ -9,6 +9,36 @@
     android:clipChildren="false"
     android:clipToPadding="false">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/temps"
+        android:text="Temps écoulé : "
+        android:textSize="18sp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_alignParentStart="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/mode"
+        android:text="Mode : "
+        android:textSize="18sp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_alignParentEnd="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/score"
+        android:text="Score : 0"
+        android:textSize="26sp"
+        android:textStyle="bold"
+        android:layout_below="@+id/temps"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="12dp"/>
     <!-- Grille principale -->
     <TableLayout
         android:id="@+id/table"

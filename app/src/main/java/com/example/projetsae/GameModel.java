@@ -89,5 +89,11 @@ public class GameModel {
                 grille[i][colonne] = grille[i + 1][colonne];
             grille[5][colonne] = temp;
         }
+
+
+    public void setCase(int i, int j, int val) {
+        grille[i][j] = val;
+    }
+
     }
 

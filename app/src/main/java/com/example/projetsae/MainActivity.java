@@ -1,6 +1,8 @@
 package com.example.projetsae;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -8,9 +10,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.TextView;
 
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.Random;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -32,6 +37,10 @@ public class MainActivity extends AppCompatActivity {
 
     private int ligneSelectionnee;
     private int colonneSelectionnee;
+
+    private int le_score = 0;
+    private TextView score;
+
     private int[] images = {
             R.drawable.c1,
             R.drawable.c2,
@@ -49,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         model = new GameModel();
         table = findViewById(R.id.table);
         overlay = findViewById(R.id.overlay);
+        score = findViewById(R.id.score);
 
         afficherGrille();
         table.post(() -> {
@@ -149,8 +159,14 @@ public class MainActivity extends AppCompatActivity {
                                 overlay.setTranslationY(0);
 
                                 enDrag = false;
-
                                 afficherGrille();
+
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                    verifierAlignements();
+                                    afficherGrille();
+                                }, 200);
+
+
 
                                 return true;
                         }
@@ -167,6 +183,107 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    private void verifierAlignements() {
+
+        boolean[][] aSupprimer = new boolean[6][6];
+
+        // vérifier lignes
+        for (int i = 0; i < 6; i++) {
+
+            int compteur = 1;
+
+            for (int j = 1; j < 6; j++) {
+
+                if (model.getCase(i,j) == model.getCase(i,j-1)) {
+                    compteur++;
+                } else {
+
+                    if (compteur >= 3) {
+
+                        for (int k = 0; k < compteur; k++) {
+                            aSupprimer[i][j-1-k] = true;
+                        }
+
+                        ajouterScore(compteur);
+                    }
+
+                    compteur = 1;
+                }
+            }
+
+            if (compteur >= 3) {
+
+                for (int k = 0; k < compteur; k++) {
+                    aSupprimer[i][5-k] = true;
+                }
+
+                ajouterScore(compteur);
+            }
+        }
+
+
+        // vérifier colonnes
+        for (int j = 0; j < 6; j++) {
+
+            int compteur = 1;
+
+            for (int i = 1; i < 6; i++) {
+
+                if (model.getCase(i,j) == model.getCase(i-1,j)) {
+                    compteur++;
+                } else {
+
+                    if (compteur >= 3) {
+
+                        for (int k = 0; k < compteur; k++) {
+                            aSupprimer[i-1-k][j] = true;
+                        }
+
+                        ajouterScore(compteur);
+                    }
+
+                    compteur = 1;
+                }
+            }
+
+            if (compteur >= 3) {
+
+                for (int k = 0; k < compteur; k++) {
+                    aSupprimer[5-k][j] = true;
+                }
+
+                ajouterScore(compteur);
+            }
+        }
+
+        remplacerCases(aSupprimer);
+    }
+
+    private void ajouterScore(int nb) {
+
+        if (nb == 3) le_score += 8;
+        if (nb == 4) le_score += 16;
+        if (nb == 5) le_score += 32;
+        if (nb >= 6) le_score += 64;
+
+        score.setText("Score : " + le_score);
+    }
+
+    private void remplacerCases(boolean[][] aSupprimer) {
+
+        Random rand = new Random();
+
+        for (int i = 0; i < 6; i++) {
+            for (int j = 0; j < 6; j++) {
+
+                if (aSupprimer[i][j]) {
+
+                    int nouvelle = rand.nextInt(7);
+                    model.setCase(i,j,nouvelle);
+                }
+            }
+        }
+    }
     private void creerOverlay() {
 
         overlay.removeAllViews();
