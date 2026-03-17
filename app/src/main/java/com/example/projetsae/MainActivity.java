@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
@@ -29,12 +30,15 @@ public class MainActivity extends AppCompatActivity {
     private float debutX, debutY;
     private boolean modeHorizontal;
 
-    private final int SEUIL = 25;
+    private final int SEUIL = 20;
     private int ligneSelectionnee;
     private int colonneSelectionnee;
 
     private int le_score = 0;
     private TextView score;
+    private boolean directionFixee = false;
+    private int nbCoups = 0;
+    private TextView coups;
 
     private int[] images = {
             R.drawable.c1,
@@ -54,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         table = findViewById(R.id.table);
         overlay = findViewById(R.id.overlay);
         score = findViewById(R.id.score);
+        coups = findViewById(R.id.coups);
 
         afficherGrille();
         table.post(() -> {
@@ -74,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
 
                 ImageView img = new ImageView(this);
                 img.setImageResource(images[model.getCase(i, j)]);
-                img.setLayoutParams(new TableRow.LayoutParams(150, 150));
+                img.setLayoutParams(new TableRow.LayoutParams(100, 100));
                 final int ligne = i;
                 final int colonne = j;
 
@@ -110,15 +115,18 @@ public class MainActivity extends AppCompatActivity {
                                         } else {
                                             modeHorizontal = false;
                                         }
+                                        directionFixee = true;
+                                        creerOverlay();
                                         }
 
-                                    creerOverlay();
-                                }
 
-                                if (modeHorizontal) {
-                                    overlay.setTranslationX(diffX);
-                                } else {
-                                    overlay.setTranslationY(diffY);
+                                }
+                                if (directionFixee) {
+                                    if (modeHorizontal) {
+                                        overlay.setTranslationX(diffX);
+                                    } else {
+                                        overlay.setTranslationY(diffY);
+                                    }
                                 }
 
                                 return true;
@@ -130,6 +138,8 @@ public class MainActivity extends AppCompatActivity {
                                 float finalX = event.getRawX() - debutX;
                                 float finalY = event.getRawY() - debutY;
 
+                                boolean mouvementFait = false;
+
                                 if (modeHorizontal) {
 
                                     int deplacement = Math.round(finalX / CELL_SIZE);
@@ -137,11 +147,13 @@ public class MainActivity extends AppCompatActivity {
                                     while (deplacement > 0) {
                                         model.decalerLigneDroite(ligneSelectionnee);
                                         deplacement--;
+                                        mouvementFait = true;
                                     }
 
                                     while (deplacement < 0) {
                                         model.decalerLigneGauche(ligneSelectionnee);
                                         deplacement++;
+                                        mouvementFait = true;
                                     }
                                 } else {
 
@@ -150,11 +162,13 @@ public class MainActivity extends AppCompatActivity {
                                     while (deplacement > 0) {
                                         model.decalerColonneBas(colonneSelectionnee);
                                         deplacement--;
+                                        mouvementFait = true;
                                     }
 
                                     while (deplacement < 0) {
                                         model.decalerColonneHaut(colonneSelectionnee);
                                         deplacement++;
+                                        mouvementFait = true;
                                     }
                                 }
 
@@ -162,11 +176,16 @@ public class MainActivity extends AppCompatActivity {
                                 overlay.removeAllViews();
                                 overlay.setTranslationX(0);
                                 overlay.setTranslationY(0);
-
+                                directionFixee = false;
                                 modeHorizontal = false;
 
                                 enDrag = false;
                                 afficherGrille();
+
+                                if(mouvementFait) {
+                                    nbCoups ++;
+                                    coups.setText("nombre de coups : " + nbCoups);
+                                }
 
                                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                     int scoreGagne = verifierAlignements();

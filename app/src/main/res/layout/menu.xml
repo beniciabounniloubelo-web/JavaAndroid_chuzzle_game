@@ -4,6 +4,8 @@
     android:layout_height="match_parent"
     android:background="@color/rose_clair"
     android:id="@+id/menu"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MenuActivity"
     >
 
     <LinearLayout
