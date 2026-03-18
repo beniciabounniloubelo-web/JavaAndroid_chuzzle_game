@@ -82,7 +82,7 @@
                 android:id="@+id/regles"
                 android:backgroundTint="@color/rose_fonce"
                 android:layout_marginLeft="@android:dimen/app_icon_size"
-                android:layout_marginRight="50dp"
+                android:layout_marginRight="@android:dimen/app_icon_size"
                 />
             <Button
                 android:layout_width="134dp"
@@ -90,7 +90,9 @@
                 android:id="@+id/quitter"
                 android:text="Quitter"
                 android:textColor="@color/black"
-                android:backgroundTint="@color/rose_fonce"/>
+                android:backgroundTint="@color/rose_fonce"
+                
+                android:layout_marginRight="@android:dimen/app_icon_size"/>
         </LinearLayout>
 
 </RelativeLayout>
