@@ -215,6 +215,7 @@ public class MainActivity extends AppCompatActivity {
     private int verifierAlignements() {
         int scoreGagne = 0;
         boolean[][] aSupprimer = new boolean[6][6];
+        int combo = 0;
 
         // 1) détecter alignements horizontaux
         for (int i = 0; i < 6; i++) {
@@ -225,14 +226,14 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     if (count >= 3) {
                         for (int k = 0; k < count; k++) aSupprimer[i][j-1-k] = true;
-                        ajouterScore(count);
+                        ajouterScore(count, combo);
                     }
                     count = 1;
                 }
             }
             if (count >= 3) {
                 for (int k = 0; k < count; k++) aSupprimer[i][6-1-k] = true;
-                ajouterScore(count);
+                ajouterScore(count, combo);
             }
         }
 
@@ -245,14 +246,14 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     if (count >= 3) {
                         for (int k = 0; k < count; k++) aSupprimer[i-1-k][j] = true;
-                        ajouterScore(count);
+                        ajouterScore(count, combo);
                     }
                     count = 1;
                 }
             }
             if (count >= 3) {
                 for (int k = 0; k < count; k++) aSupprimer[6-1-k][j] = true;
-                ajouterScore(count);
+                ajouterScore(count, combo);
             }
         }
 
@@ -281,12 +282,17 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void ajouterScore(int nb) {
+    private void ajouterScore(int nb, int combo) {
 
         if (nb == 3) le_score += 8;
         if (nb == 4) le_score += 16;
         if (nb == 5) le_score += 32;
         if (nb >= 6) le_score += 64;
+
+        double bonus = 1 + 0.5 * (combo - 1);
+        int scoreCombo = (int) Math.round(le_score * bonus);
+
+        le_score += scoreCombo;
 
         score.setText("Score : " + le_score);
     }
