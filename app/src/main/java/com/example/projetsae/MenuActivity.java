@@ -1,5 +1,6 @@
 package com.example.projetsae;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
@@ -20,11 +21,15 @@ public class MenuActivity extends AppCompatActivity{
             Intent intent = new Intent(this, MainActivity.class);
             startActivity(intent);
         });
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                finishAffinity();
+            }
+        });
     }
 
-    @Override
-    public void onBackPressed() {
-        finishAffinity(); // ferme toute l'application
-    }
+
 
 }

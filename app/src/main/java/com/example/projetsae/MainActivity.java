@@ -1,5 +1,6 @@
 package com.example.projetsae;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -14,6 +15,7 @@ import android.widget.TableRow;
 import android.widget.TextView;
 
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.Random;
@@ -66,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
             View v = row.getChildAt(0);
             CELL_SIZE = v.getWidth();
         });
+
+
     }
 
     private void afficherGrille() {
@@ -288,6 +292,58 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void creerOverlay() {
+        overlay.removeAllViews();
+
+        int tableX = table.getLeft();
+        int tableY = table.getTop();
+
+        if (modeHorizontal) {
+            overlay.setOrientation(LinearLayout.HORIZONTAL);
+
+            TableRow row = (TableRow) table.getChildAt(ligneSelectionnee);
+
+            overlay.setX(tableX);
+            overlay.setY(tableY + row.getTop());
+
+            for (int j = 0; j < row.getChildCount(); j++) {
+                ImageView original = (ImageView) row.getChildAt(j);
+                ImageView copy = new ImageView(this);
+                copy.setImageDrawable(original.getDrawable());
+                copy.setLayoutParams(original.getLayoutParams());
+                overlay.addView(copy);
+                original.setVisibility(View.INVISIBLE);
+            }
+
+        } else {
+            overlay.setOrientation(LinearLayout.VERTICAL);
+
+            TableRow firstRow = (TableRow) table.getChildAt(0);
+            View firstCell = firstRow.getChildAt(colonneSelectionnee);
+
+            overlay.setX(tableX + firstCell.getLeft());
+            overlay.setY(tableY);
+
+            int currentY = 0;
+            for (int i = 0; i < table.getChildCount(); i++) {
+                TableRow row = (TableRow) table.getChildAt(i);
+                ImageView original = (ImageView) row.getChildAt(colonneSelectionnee);
+                ImageView copy = new ImageView(this);
+                copy.setImageDrawable(original.getDrawable());
+
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    original.getWidth(),
+                    original.getHeight()
+                );
+                copy.setLayoutParams(params);
+                overlay.addView(copy);
+                original.setVisibility(View.INVISIBLE);
+            }
+            overlay.setY(table.getTop());
+        }
+
+        overlay.setVisibility(View.VISIBLE);
+    }
+    /*private void creerOverlay() {
 
         overlay.removeAllViews();
 
@@ -305,7 +361,7 @@ public class MainActivity extends AppCompatActivity {
             int[] tablePos = new int[2];
             table.getLocationOnScreen(tablePos);
 
-            float posX = tablePos[0] - loc[0];
+            float posX = tablePos[0] + loc[0];
             float posY = loc[1];
 
             overlay.setX(posX);
@@ -363,11 +419,23 @@ public class MainActivity extends AppCompatActivity {
         overlay.setVisibility(View.VISIBLE);
 
 
-    }
+    }*/
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed(); // retourne au menu
-    }
+/* A mettre à la fin d'une partie
 
+
+SharedPreferences prefs = getSharedPreferences("saves", MODE_PRIVATE);
+SharedPreferences.Editor editor = prefs.edit();
+
+// récupérer nombre de parties déjà sauvegardées
+int nb = prefs.getInt("nbParties", 0);
+
+// sauvegarder la seed
+editor.putLong("seed_" + nb, seed);
+
+// incrémenter compteur
+editor.putInt("nbParties", nb + 1);
+
+editor.apply();
+*/
 }
