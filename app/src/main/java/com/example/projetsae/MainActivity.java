@@ -194,6 +194,24 @@ public class MainActivity extends AppCompatActivity {
                                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
                                     int scoreGagne = verifierAlignements();
                                     afficherGrille();
+
+                                    // Fin de partie
+                                    if (model.aucunCoupPossible()) { //verification si partie finie
+                                        new androidx.appcompat.app.AlertDialog.Builder(this)
+                                                .setTitle("Partie terminée !")
+                                                .setMessage("Aucun coup possible.\nScore final : " + le_score)
+                                                .setPositiveButton("Rejouer", (dialog, which) -> { //soit on rejoue et tt est remis a 0
+                                                    model = new GameModel();
+                                                    le_score = 0;
+                                                    nbCoups = 0;
+                                                    score.setText("Score : 0");
+                                                    coups.setText("nombre de coups : 0");
+                                                    afficherGrille();
+                                                })
+                                                .setNegativeButton("Menu", (dialog, which) -> finish()) //soit direction menu
+                                                .setCancelable(false) //pas possible de fermer le dialog donc grille visible mais inutilisable
+                                                .show(); //dialog rendu visible
+                                    }
                                 }, 2000);
 
 
@@ -258,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 3) faire tomber les cases et remplir les vides
-        Random rand = new Random();
         for (int j = 0; j < 6; j++) {
             int vide = 0;
             for (int i = 5; i >= 0; i--) {
@@ -270,7 +287,7 @@ public class MainActivity extends AppCompatActivity {
             }
             // nouvelles cases en haut
             for (int i = 0; i < vide; i++) {
-                model.setCase(i, j, rand.nextInt(7));
+                model.setCase(i, j, model.prochaineCouleur()); //pour que la graine reste la meme
             }
         }
 

@@ -7,11 +7,20 @@ public class GameModel {
 
 
         private int[][] grille = new int[6][6];
-        private Random rand = new Random();
 
-        public GameModel() {
-            genererGrille();
+        private long seed; //la graine est creee
+        private Random rand; //creation du random avec cette graine
+
+    public GameModel() {
+        seed = new Random().nextLong(); // on génère la valeur long
+        rand = new Random(seed);        // on crée le Random avec cette graine
+        genererGrille();
+    }
+
+    public int prochaineCouleur() { //c'est la mm graine qui sera reutilisee
+            return rand.nextInt(7);
         }
+        public long getGraine(){return seed;}
 
         public int getCase(int i, int j) {
             return grille[i][j];
@@ -93,6 +102,80 @@ public class GameModel {
 
     public void setCase(int i, int j, int val) {
         grille[i][j] = val;
+    }
+
+    /**
+     * Retourne true si aucun glissement ne peut créer un alignement de 3+ elements
+     */
+    //copie temporaire pour manipuler la grille et ainsi verifier si il reste encore des coups possibles
+    private int[][] copierGrille() {
+        int[][] copie = new int[6][6];
+        for (int i = 0; i < 6; i++)
+            copie[i] = grille[i].clone();
+        return copie;
+    }
+
+
+    //pareil que verifierAlignement mais sans modifier la grille
+    private boolean aUnAlignement(int[][] g) {
+        // Horizontal
+        for (int i = 0; i < 6; i++) {
+            int count = 1;
+            for (int j = 1; j < 6; j++) {
+                if (g[i][j] == g[i][j - 1]) {
+                    count++;
+                    if (count >= 3) return true;
+                } else {
+                    count = 1;
+                }
+            }
+        }
+        // Vertical
+        for (int j = 0; j < 6; j++) {
+            int count = 1;
+            for (int i = 1; i < 6; i++) {
+                if (g[i][j] == g[i - 1][j]) {
+                    count++;
+                    if (count >= 3) return true;
+                } else {
+                    count = 1;
+                }
+            }
+        }
+        return false;
+    }
+
+    public boolean aucunCoupPossible() {
+
+        // Tester tous les decalages de ligne possible
+        for (int i = 0; i < 6; i++) {
+            for (int shift = 1; shift < 6; shift++) {
+                int[][] copie = copierGrille(); //on manipule une copie de la grille
+                // Simuler un décalage droite de 'shift' cases
+                for (int s = 0; s < shift; s++) {
+                    int temp = copie[i][5];
+                    for (int j = 5; j > 0; j--) copie[i][j] = copie[i][j - 1];
+                    copie[i][0] = temp;
+                }
+                if (aUnAlignement(copie)) return false;
+            }
+        }
+
+        // Tester tous les décalages de colonne possible
+        for (int j = 0; j < 6; j++) {
+            for (int shift = 1; shift < 6; shift++) {
+                int[][] copie = copierGrille();
+                // Simuler un décalage bas de 'shift' cases
+                for (int s = 0; s < shift; s++) {
+                    int temp = copie[5][j];
+                    for (int i = 5; i > 0; i--) copie[i][j] = copie[i - 1][j];
+                    copie[0][j] = temp;
+                }
+                if (aUnAlignement(copie)) return false;
+            }
+        }
+
+        return true; // aucun coup trouvé → partie terminée
     }
 
     }
