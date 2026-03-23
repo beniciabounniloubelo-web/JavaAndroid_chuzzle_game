@@ -37,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private int colonneSelectionnee;
 
     private int le_score = 0;
+
+    private long la_graine;
     private TextView score;
     private boolean directionFixee = false;
     private int nbCoups = 0;
@@ -57,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         model = new GameModel();
+        la_graine = model.getGraine();
         table = findViewById(R.id.table);
         overlay = findViewById(R.id.overlay);
         score = findViewById(R.id.score);
@@ -192,16 +195,22 @@ public class MainActivity extends AppCompatActivity {
                                 }
 
                                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                    int scoreGagne = verifierAlignements();
+                                    boolean continuer = true;
+                                    while (continuer) {
+                                        int avant = le_score;
+                                        verifierAlignements();
+                                        continuer = (le_score > avant); // encore des combos ?
+                                    }
                                     afficherGrille();
 
                                     // Fin de partie
                                     if (model.aucunCoupPossible()) { //verification si partie finie
                                         new androidx.appcompat.app.AlertDialog.Builder(this)
                                                 .setTitle("Partie terminée !")
-                                                .setMessage("Aucun coup possible.\nScore final : " + le_score)
+                                                .setMessage("Aucun coup possible.\nScore final : " + le_score+"\nGraine de la partie : "+ la_graine)
                                                 .setPositiveButton("Rejouer", (dialog, which) -> { //soit on rejoue et tt est remis a 0
                                                     model = new GameModel();
+                                                    la_graine = model.getGraine();
                                                     le_score = 0;
                                                     nbCoups = 0;
                                                     score.setText("Score : 0");
@@ -232,9 +241,12 @@ public class MainActivity extends AppCompatActivity {
 
     private int verifierAlignements() {
         int scoreGagne = 0;
-        boolean[][] aSupprimer = new boolean[6][6];
+        boolean aEuSuppresion; //pour aider a la reaction en cascade
         int combo = 0;
 
+        do {
+            boolean[][] aSupprimer = new boolean[6][6];
+            aEuSuppresion = false;
         // 1) détecter alignements horizontaux
         for (int i = 0; i < 6; i++) {
             int count = 1;
@@ -245,6 +257,7 @@ public class MainActivity extends AppCompatActivity {
                     if (count >= 3) {
                         for (int k = 0; k < count; k++) aSupprimer[i][j-1-k] = true;
                         ajouterScore(count, combo);
+                        aEuSuppresion = true;
                     }
                     count = 1;
                 }
@@ -252,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
             if (count >= 3) {
                 for (int k = 0; k < count; k++) aSupprimer[i][6-1-k] = true;
                 ajouterScore(count, combo);
+                aEuSuppresion = true;
             }
         }
 
@@ -265,6 +279,7 @@ public class MainActivity extends AppCompatActivity {
                     if (count >= 3) {
                         for (int k = 0; k < count; k++) aSupprimer[i-1-k][j] = true;
                         ajouterScore(count, combo);
+                        aEuSuppresion = true;
                     }
                     count = 1;
                 }
@@ -272,24 +287,29 @@ public class MainActivity extends AppCompatActivity {
             if (count >= 3) {
                 for (int k = 0; k < count; k++) aSupprimer[6-1-k][j] = true;
                 ajouterScore(count, combo);
+                aEuSuppresion = true;
             }
         }
 
         // 3) faire tomber les cases et remplir les vides
-        for (int j = 0; j < 6; j++) {
-            int vide = 0;
-            for (int i = 5; i >= 0; i--) {
-                if (aSupprimer[i][j]) {
-                    vide++;
-                } else if (vide > 0) {
-                    model.setCase(i+vide, j, model.getCase(i,j));
+            if (aEuSuppresion) {
+                for (int j = 0; j < 6; j++) {
+                    int vide = 0;
+                    for (int i = 5; i >= 0; i--) {
+                        if (aSupprimer[i][j]) {
+                            vide++;
+                        } else if (vide > 0) {
+                            model.setCase(i + vide, j, model.getCase(i, j));
+                        }
+                    }
+                    // nouvelles cases en haut
+                    for (int i = 0; i < vide; i++) {
+                        model.setCase(i, j, model.prochaineCouleur()); //pour que la graine reste la meme
+                    }
                 }
+                combo++;
             }
-            // nouvelles cases en haut
-            for (int i = 0; i < vide; i++) {
-                model.setCase(i, j, model.prochaineCouleur()); //pour que la graine reste la meme
-            }
-        }
+        } while (aEuSuppresion);
 
         // ajouterScore(scoreGagne);
         return scoreGagne;

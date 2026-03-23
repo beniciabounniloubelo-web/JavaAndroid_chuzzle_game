@@ -4,24 +4,20 @@ import java.util.Random;
 
 public class GameModel {
 
-
-
         private int[][] grille = new int[6][6];
-
         private long seed; //la graine est creee
         private Random rand; //creation du random avec cette graine
 
     public GameModel() {
-        seed = new Random().nextLong(); // on génère la valeur long
+        seed = new Random().nextLong(); // on génère la valeur long, la graine en fait de la partie
         rand = new Random(seed);        // on crée le Random avec cette graine
         genererGrille();
     }
 
+    public long getGraine(){return seed;}
     public int prochaineCouleur() { //c'est la mm graine qui sera reutilisee
             return rand.nextInt(7);
         }
-        public long getGraine(){return seed;}
-
         public int getCase(int i, int j) {
             return grille[i][j];
         }
@@ -37,6 +33,7 @@ public class GameModel {
                     while (recommence) {
 
                         int couleur = rand.nextInt(7);
+                        /*
                         int countLigne = 0;
                         int countColonne = 0;
 
@@ -55,6 +52,13 @@ public class GameModel {
                         }
 
                         if (countLigne < 2 && countColonne < 2) {
+                            grille[i][j] = couleur;
+                            recommence = false;
+                        }*/
+                        boolean trop = false;
+                        if (j >= 2 && grille[i][j-1] == couleur && grille[i][j-2] == couleur) trop = true;
+                        if (i >= 2 && grille[i-1][j] == couleur && grille[i-2][j] == couleur) trop = true;
+                        if (!trop) {
                             grille[i][j] = couleur;
                             recommence = false;
                         }
