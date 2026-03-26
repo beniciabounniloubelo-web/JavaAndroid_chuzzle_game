@@ -28,6 +28,15 @@ public class MenuActivity extends AppCompatActivity{
                 finishAffinity();
             }
         });
+
+        Button destine = findViewById(R.id.destine);
+        destine.setOnClickListener(v -> {
+
+
+            Intent intent = new Intent(this, ListeActivity.class);
+            startActivity(intent);
+        });
+
     }
 
 

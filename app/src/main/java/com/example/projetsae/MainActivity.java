@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import java.util.Random;
 
@@ -51,7 +52,9 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.c4,
             R.drawable.c5,
             R.drawable.c6,
-            R.drawable.c7
+            R.drawable.c7,
+            R.drawable.cpersistante,
+            R.drawable.cmystere
     };
 
     @Override
@@ -85,7 +88,17 @@ public class MainActivity extends AppCompatActivity {
             for (int j = 0; j < 6; j++) {
 
                 ImageView img = new ImageView(this);
-                img.setImageResource(images[model.getCase(i, j)]);
+                int val = model.getCase(i, j);
+                if (val == -1) img.setForeground(ContextCompat.getDrawable(this, R.drawable.cmystere)); //pour les case mysteres
+                else if (val == -2) {
+                    img.setImageResource(images[model.getCouleurCachee(i, j)]); // couleur en fond
+                    img.setForeground(ContextCompat.getDrawable(this, R.drawable.cpersistante)); //pour es cases persistantes
+                }
+                else {
+                    img.setImageResource(images[val]);
+                    img.setForeground(null); // important : effacer le foreground des cases normales
+                }
+                //img.setForeground(ContextCompat.getDrawable(this, R.drawable.cverrou)); //pour mettre les verrous
                 img.setLayoutParams(new TableRow.LayoutParams(100, 100));
                 final int ligne = i;
                 final int colonne = j;
@@ -239,6 +252,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private int couleurEffective(int i, int j) { //histoire de renvoyer la vraie couleur de la case
+        int val = model.getCase(i, j);
+        if (val == -1 || val == -2) return model.getCouleurCachee(i, j);
+        return val;
+    }
+
     private int verifierAlignements() {
         int scoreGagne = 0;
         boolean aEuSuppresion; //pour aider a la reaction en cascade
@@ -247,15 +266,25 @@ public class MainActivity extends AppCompatActivity {
         do {
             boolean[][] aSupprimer = new boolean[6][6];
             aEuSuppresion = false;
+
         // 1) détecter alignements horizontaux
         for (int i = 0; i < 6; i++) {
             int count = 1;
             for (int j = 1; j < 6; j++) {
-                if (model.getCase(i,j) == model.getCase(i,j-1)) {
+                if (couleurEffective(i,j) == couleurEffective(i,j-1)) {
                     count++;
                 } else {
                     if (count >= 3) {
-                        for (int k = 0; k < count; k++) aSupprimer[i][j-1-k] = true;
+                        for (int k = 0; k < count; k++) {
+                            int li = i, lj = j-1-k;
+                            if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) { //si resistance, la diminue de 1
+                                model.setResistance(li, lj, model.getResistance(li,lj) - 1);
+                            } else if (model.getCase(li,lj) == -1) {
+                                model.setCase(li, lj, model.getCouleurCachee(li, lj)); // si mystere, revele la couleur
+                            } else {
+                                aSupprimer[li][lj] = true; // sinon suppression normale
+                            }
+                        }
                         ajouterScore(count, combo);
                         aEuSuppresion = true;
                     }
@@ -263,7 +292,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (count >= 3) {
-                for (int k = 0; k < count; k++) aSupprimer[i][6-1-k] = true;
+                for (int k = 0; k < count; k++) {
+                    int li = i, lj = 6-1-k;
+                    if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
+                        model.setResistance(li, lj, model.getResistance(li,lj) - 1); // résiste, pas supprimée
+                    } else if (model.getCase(li,lj) == -1) {
+                        model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+                    } else {
+                        aSupprimer[li][lj] = true; // suppression normale
+                    }
+                }
                 ajouterScore(count, combo);
                 aEuSuppresion = true;
             }
@@ -273,11 +311,20 @@ public class MainActivity extends AppCompatActivity {
         for (int j = 0; j < 6; j++) {
             int count = 1;
             for (int i = 1; i < 6; i++) {
-                if (model.getCase(i,j) == model.getCase(i-1,j)) {
+                if (couleurEffective(i,j) == couleurEffective(i-1,j)) {
                     count++;
                 } else {
                     if (count >= 3) {
-                        for (int k = 0; k < count; k++) aSupprimer[i-1-k][j] = true;
+                        for (int k = 0; k < count; k++) {
+                            int li = i-1-k, lj = j;
+                            if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
+                                model.setResistance(li, lj, model.getResistance(li,lj) - 1); // résiste, pas supprimée
+                            } else if (model.getCase(li,lj) == -1) {
+                                model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+                            } else {
+                                aSupprimer[li][lj] = true; // suppression normale
+                            }
+                        }
                         ajouterScore(count, combo);
                         aEuSuppresion = true;
                     }
@@ -285,7 +332,16 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (count >= 3) {
-                for (int k = 0; k < count; k++) aSupprimer[6-1-k][j] = true;
+                for (int k = 0; k < count; k++) {
+                    int li = 6-1-k, lj = j;
+                    if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
+                        model.setResistance(li, lj, model.getResistance(li,lj) - 1); // résiste, pas supprimée
+                    } else if (model.getCase(li,lj) == -1) {
+                        model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+                    } else {
+                        aSupprimer[li][lj] = true; // suppression normale
+                    }
+                }
                 ajouterScore(count, combo);
                 aEuSuppresion = true;
             }
@@ -304,7 +360,9 @@ public class MainActivity extends AppCompatActivity {
                     }
                     // nouvelles cases en haut
                     for (int i = 0; i < vide; i++) {
-                        model.setCase(i, j, model.prochaineCouleur()); //pour que la graine reste la meme
+                        model.setCase(i, j, model.prochaineCouleur(i, j)); //pour que la graine reste la meme
+                        model.setCouleurCachee(i + vide, j, model.getCouleurCachee(i, j)); // comme ça quand une Persistante glisse vers le bas elle garde sa couleur cachée et sa résistance
+                        model.setResistance(i + vide, j, model.getResistance(i, j));
                     }
                 }
                 combo++;
@@ -320,17 +378,18 @@ public class MainActivity extends AppCompatActivity {
 
 
     private void ajouterScore(int nb, int combo) {
+        int points;
+        if (nb == 3) points = 8;
+        else if (nb == 4) points = 16;
+        else if (nb == 5) points = 32;
+        else points = 64;
 
-        if (nb == 3) le_score += 8;
-        if (nb == 4) le_score += 16;
-        if (nb == 5) le_score += 32;
-        if (nb >= 6) le_score += 64;
+        if (combo > 1){
+            double bonus = 1 + 0.5 * (combo - 1);
+            points = (int) Math.round(points*bonus);
+        }
 
-        double bonus = 1 + 0.5 * (combo - 1);
-        int scoreCombo = (int) Math.round(le_score * bonus);
-
-        le_score += scoreCombo;
-
+        le_score += points;
         score.setText("Score : " + le_score);
     }
 

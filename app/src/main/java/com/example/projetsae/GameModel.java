@@ -7,23 +7,51 @@ public class GameModel {
         private int[][] grille = new int[6][6];
         private long seed; //la graine est creee
         private Random rand; //creation du random avec cette graine
+        //pour les cases speciales !!
+        private int[][] couleurCachee = new int[6][6]; // couleur sous Mystere/Persistante
+        private int[][] resistance = new int[6][6];     // 3 pour Persistante, 0 sinon
 
     public GameModel() {
-        seed = new Random().nextLong(); // on génère la valeur long, la graine en fait de la partie
+        seed = Math.abs(new Random().nextLong()); // on génère la graine de la partie + peut que etre positif
         rand = new Random(seed);        // on crée le Random avec cette graine
-        genererGrille();
+        genererGrilleInitiale();
     }
 
     public long getGraine(){return seed;}
-    public int prochaineCouleur() { //c'est la mm graine qui sera reutilisee
-            return rand.nextInt(7);
+
+    //genere aussi cases speciales
+    public int prochaineCouleur(int i, int j) { //c'est la mm graine qui sera reutilisee
+        double r = rand.nextDouble();
+        if (r < 0.05) { //5% de chances d'apparaitre sinon trop frequent
+            couleurCachee[i][j] = rand.nextInt(7);
+            return -1; // case mystère
         }
+        if (r < 0.1) { //5% de chances d'apparaitre sinon trop frequent
+            couleurCachee[i][j] = rand.nextInt(7);
+            resistance[i][j] = 3;
+            return -2; // case persistante
+        }
+            return rand.nextInt(7); //90% de chances pour le reste
+        }
+
         public int getCase(int i, int j) {
             return grille[i][j];
         }
 
+
+    public void setCouleurCachee(int i, int j, int couleur) {
+        couleurCachee[i][j] = couleur;
+        if (grille[i][j] == -2) resistance[i][j] = 3;
+    }
+
+    public int getCouleurCachee(int i, int j) { return couleurCachee[i][j]; }
+    public int getResistance(int i, int j) { return resistance[i][j]; }
+    public void setResistance(int i, int j, int val) {
+        resistance[i][j] = val;
+    }
+
         // Génération de la grille
-        public void genererGrille() {
+        public void genererGrilleInitiale() {
 
             for (int i = 0; i < 6; i++) {
                 for (int j = 0; j < 6; j++) {
@@ -109,7 +137,7 @@ public class GameModel {
     }
 
     /**
-     * Retourne true si aucun glissement ne peut créer un alignement de 3+ elements
+     * Retourne true si aucun glissement ne peut creer un alignement de 3+ elements
      */
     //copie temporaire pour manipuler la grille et ainsi verifier si il reste encore des coups possibles
     private int[][] copierGrille() {
