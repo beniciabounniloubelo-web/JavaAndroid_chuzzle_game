@@ -227,12 +227,22 @@ public class MainActivity extends AppCompatActivity {
 
                                     // Fin de partie
                                     if (model.aucunCoupPossible()) { //verification si partie finie
+                                        SharedPreferences prefs = getSharedPreferences("saves", MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = prefs.edit();
+                                        int nb = prefs.getInt("nbParties", 0);
+                                        editor.putLong("seed_" + nb, la_graine);
+                                        editor.putInt("nbParties", nb + 1);
+                                        editor.apply();
                                         new androidx.appcompat.app.AlertDialog.Builder(this)
                                                 .setTitle("Partie terminée !")
                                                 .setMessage("Aucun coup possible.\nScore final : " + le_score+"\nGraine de la partie : "+ la_graine)
                                                 .setPositiveButton("Rejouer", (dialog, which) -> { //soit on rejoue et tt est remis a 0
-                                                    model = new GameModel();
-                                                    la_graine = model.getGraine();
+                                                    if (modelDestine) {
+                                                        model = new GameModel(la_graine); // même graine
+                                                    } else {
+                                                        model = new GameModel();          // nouvelle graine aléatoire
+                                                        la_graine = model.getGraine();
+                                                    }
                                                     le_score = 0;
                                                     nbCoups = 0;
                                                     score.setText("Score : 0");
