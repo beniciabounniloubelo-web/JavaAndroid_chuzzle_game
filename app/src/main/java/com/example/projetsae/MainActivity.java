@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     private float debutX, debutY;
     private boolean modeHorizontal;
 
+    private boolean modelDestine = false;
     private final int SEUIL = 20;
     private int ligneSelectionnee;
     private int colonneSelectionnee;
@@ -61,8 +62,16 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        model = new GameModel();
-        la_graine = model.getGraine();
+        String seedExtra = getIntent().getStringExtra("seed");
+        if (seedExtra != null) {
+            modelDestine = true;
+            la_graine = Long.parseLong(seedExtra);
+            model = new GameModel(la_graine); // mode destinée
+        } else {
+            modelDestine = false;
+            model = new GameModel();          // mode normal
+            la_graine = model.getGraine();
+        }
         table = findViewById(R.id.table);
         overlay = findViewById(R.id.overlay);
         score = findViewById(R.id.score);

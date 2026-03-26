@@ -17,6 +17,12 @@ public class GameModel {
         genererGrilleInitiale();
     }
 
+    public GameModel(long graineFournie) {
+        seed = graineFournie;
+        rand = new Random(seed);
+        genererGrilleInitiale();
+    }
+
     public long getGraine(){return seed;}
 
     //genere aussi cases speciales
