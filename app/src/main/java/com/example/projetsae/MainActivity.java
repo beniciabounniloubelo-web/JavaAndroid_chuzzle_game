@@ -415,8 +415,10 @@ public class MainActivity extends AppCompatActivity {
                     // nouvelles cases en haut
                     for (int i = 0; i < vide; i++) {
                         model.setCase(i, j, model.prochaineCouleur(i, j)); //pour que la graine reste la meme
-                        model.setCouleurCachee(i + vide, j, model.getCouleurCachee(i, j)); // comme ça quand une Persistante glisse vers le bas elle garde sa couleur cachée et sa résistance
-                        model.setResistance(i + vide, j, model.getResistance(i, j));
+                        if (i + vide < 6) { // vérification avant d'accéder
+                            model.setCouleurCachee(i + vide, j, model.getCouleurCachee(i, j)); // comme ça quand une Persistante glisse vers le bas elle garde sa couleur cachée et sa résistance
+                            model.setResistance(i + vide, j, model.getResistance(i, j));
+                        }
                     }
                 }
                 combo++;
