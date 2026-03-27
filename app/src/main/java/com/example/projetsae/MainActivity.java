@@ -118,10 +118,10 @@ public class MainActivity extends AppCompatActivity {
                 ImageView img = new ImageView(this);
                 int val = model.getCase(i, j);
                 if (val == -1) img.setForeground(ContextCompat.getDrawable(this, R.drawable.cmystere)); //pour les case mysteres
-                /*else if (val == -2) {
+                else if (val == -2) {
                     img.setImageResource(images[model.getCouleurCachee(i, j)]); // couleur en fond
                     img.setForeground(ContextCompat.getDrawable(this, R.drawable.cpersistante)); //pour es cases persistantes
-                }*/
+                }
                 else {
                     img.setImageResource(images[val]);
                     img.setForeground(null); // important : effacer le foreground des cases normales
@@ -188,36 +188,39 @@ public class MainActivity extends AppCompatActivity {
 
                                 boolean mouvementFait = false;
 
+                                int[][] sauvegarde = model.sauvegarderGrille(); //histoire de se rappeler de la gille avant un mouv
+
                                 if (modeHorizontal) {
-
                                     int deplacement = Math.round(finalX / CELL_SIZE);
-
                                     while (deplacement > 0) {
                                         model.decalerLigneDroite(ligneSelectionnee);
                                         deplacement--;
                                         mouvementFait = true;
                                     }
-
                                     while (deplacement < 0) {
                                         model.decalerLigneGauche(ligneSelectionnee);
                                         deplacement++;
                                         mouvementFait = true;
                                     }
                                 } else {
-
                                     int deplacement = Math.round(finalY / CELL_SIZE);
-
                                     while (deplacement > 0) {
                                         model.decalerColonneBas(colonneSelectionnee);
                                         deplacement--;
                                         mouvementFait = true;
                                     }
-
                                     while (deplacement < 0) {
                                         model.decalerColonneHaut(colonneSelectionnee);
                                         deplacement++;
                                         mouvementFait = true;
                                     }
+                                }
+
+                                // vérifier si le déplacement crée un alignement
+                                if (model.aUnAlignement(model.getGrille())) {
+                                    mouvementFait = true;
+                                } else {
+                                    model.restaurerGrille(sauvegarde); // aucun alignement → on annule
                                 }
 
                                 overlay.setVisibility(View.GONE);
@@ -303,6 +306,7 @@ public class MainActivity extends AppCompatActivity {
 
         do {
             boolean[][] aSupprimer = new boolean[6][6];
+            boolean[][] aResister = new boolean[6][6];
             aEuSuppresion = false;
 
         // 1) détecter alignements horizontaux
@@ -316,7 +320,7 @@ public class MainActivity extends AppCompatActivity {
                         for (int k = 0; k < count; k++) {
                             int li = i, lj = j-1-k;
                             if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) { //si resistance, la diminue de 1
-                                model.setResistance(li, lj, model.getResistance(li,lj) - 1);
+                                aResister[li][lj] = true;
                             } else if (model.getCase(li,lj) == -1) {
                                 model.setCase(li, lj, model.getCouleurCachee(li, lj)); // si mystere, revele la couleur
                             } else {
@@ -333,7 +337,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int k = 0; k < count; k++) {
                     int li = i, lj = 6-1-k;
                     if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
-                        model.setResistance(li, lj, model.getResistance(li,lj) - 1); // résiste, pas supprimée
+                        aResister[li][lj] = true;
                     } else if (model.getCase(li,lj) == -1) {
                         model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
                     } else {
@@ -356,7 +360,7 @@ public class MainActivity extends AppCompatActivity {
                         for (int k = 0; k < count; k++) {
                             int li = i-1-k, lj = j;
                             if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
-                                model.setResistance(li, lj, model.getResistance(li,lj) - 1); // résiste, pas supprimée
+                                aResister[li][lj] = true;
                             } else if (model.getCase(li,lj) == -1) {
                                 model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
                             } else {
@@ -373,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
                 for (int k = 0; k < count; k++) {
                     int li = 6-1-k, lj = j;
                     if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
-                        model.setResistance(li, lj, model.getResistance(li,lj) - 1); // résiste, pas supprimée
+                        aResister[li][lj] = true;
                     } else if (model.getCase(li,lj) == -1) {
                         model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
                     } else {
@@ -385,7 +389,19 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // 3) faire tomber les cases et remplir les vides
+        // 3) appliquer le s resistances une seule fois
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 6; j++) {
+                    if (aResister[i][j]) {
+                        model.setResistance(i, j, model.getResistance(i, j) - 1);
+                        if (model.getResistance(i, j) == 0) {
+                            aSupprimer[i][j] = true; // résistance épuisée, on supprime
+                        }
+                        aEuSuppresion = true;
+                    }
+                }
+            }
+        // 4) faire tomber les cases et remplir les vides
             if (aEuSuppresion) {
                 for (int j = 0; j < 6; j++) {
                     int vide = 0;

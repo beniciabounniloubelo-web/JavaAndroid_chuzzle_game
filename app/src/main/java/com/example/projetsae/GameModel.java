@@ -41,6 +41,18 @@ public class GameModel {
         genererGrilleInitiale();
     }
 
+    public int[][] sauvegarderGrille() {
+        int[][] copie = new int[6][6];
+        for (int i = 0; i < 6; i++)
+            copie[i] = grille[i].clone();
+        return copie;
+    }
+
+    public void restaurerGrille(int[][] sauvegarde) {
+        for (int i = 0; i < 6; i++)
+            grille[i] = sauvegarde[i].clone();
+    }
+
     public long getGraine(){return seed;}
 
     //genere aussi cases speciales
@@ -124,37 +136,65 @@ public class GameModel {
         // Décalage circulaire ligne droite
         public void decalerLigneDroite(int ligne) {
             int temp = grille[ligne][5];
+            int tempCouleur = couleurCachee[ligne][5];
+            int tempResistance = resistance[ligne][5];
 
             for (int j = 5; j > 0; j--) {
                 grille[ligne][j] = grille[ligne][j - 1];
+                couleurCachee[ligne][j] = couleurCachee[ligne][j - 1];
+                resistance[ligne][j] = resistance[ligne][j - 1];
             }
 
             grille[ligne][0] = temp;
-        }
-
-        // Décalage circulaire colonne bas
-        public void decalerColonneBas(int colonne) {
-            int temp = grille[5][colonne];
-
-            for (int i = 5; i > 0; i--) {
-                grille[i][colonne] = grille[i - 1][colonne];
-            }
-
-            grille[0][colonne] = temp;
+            couleurCachee[ligne][0] = tempCouleur;
+            resistance[ligne][0] = tempResistance;
         }
 
         public void decalerLigneGauche(int ligne) {
             int temp = grille[ligne][0];
-            for (int j = 0; j < 5; j++)
+            int tempCouleur = couleurCachee[ligne][0];
+            int tempResistance = resistance[ligne][0];
+
+            for (int j = 0; j < 5; j++){
                 grille[ligne][j] = grille[ligne][j + 1];
-            grille[ligne][5] = temp;
+                couleurCachee[ligne][j] = couleurCachee[ligne][j + 1];
+                resistance[ligne][j] = resistance[ligne][j + 1];
         }
+            grille[ligne][5] = temp;
+            couleurCachee[ligne][5] = tempCouleur;
+            resistance[ligne][5] = tempResistance;
+        }
+
+    // Décalage circulaire colonne bas
+    public void decalerColonneBas(int colonne) {
+        int temp = grille[5][colonne];
+        int tempCouleur = couleurCachee[5][colonne];
+        int tempResistance = resistance[5][colonne];
+
+        for (int i = 5; i > 0; i--) {
+            grille[i][colonne] = grille[i - 1][colonne];
+            couleurCachee[i][colonne] = couleurCachee[i - 1][colonne];
+            resistance[i][colonne] = resistance[i - 1][colonne];
+        }
+
+        grille[0][colonne] = temp;
+        couleurCachee[0][colonne] = tempCouleur;
+        resistance[0][colonne] = tempResistance;
+    }
 
         public void decalerColonneHaut(int colonne) {
             int temp = grille[0][colonne];
-            for (int i = 0; i < 5; i++)
+            int tempCouleur = couleurCachee[0][colonne];
+            int tempResistance = resistance[0][colonne];
+
+            for (int i = 0; i < 5; i++) {
                 grille[i][colonne] = grille[i + 1][colonne];
+                couleurCachee[i][colonne] = couleurCachee[i + 1][colonne];
+                resistance[i][colonne] = resistance[i + 1][colonne];
+            }
             grille[5][colonne] = temp;
+            couleurCachee[5][colonne] = tempCouleur;
+            resistance[5][colonne] = tempResistance;
         }
 
 
@@ -174,8 +214,10 @@ public class GameModel {
     }
 
 
+    public int[][] getGrille() { return grille; }
+
     //pareil que verifierAlignement mais sans modifier la grille
-    private boolean aUnAlignement(int[][] g) {
+    public boolean aUnAlignement(int[][] g) {
         // Horizontal
         for (int i = 0; i < 6; i++) {
             int count = 1;

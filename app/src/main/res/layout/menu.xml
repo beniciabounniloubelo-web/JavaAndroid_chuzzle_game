@@ -51,21 +51,9 @@
             android:textColor="@color/black"
             android:padding="25dp"
             />
-        <Button
-            android:layout_width="250dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/options"
-            android:text="Options"
-            android:fontFamily="@font/gagalin"
-            android:textSize="30sp"
-            android:layout_marginTop="40dp"
-            android:padding="25dp"
-            android:backgroundTint="@color/rose_fonce"
-            android:textColor="@color/black"
-            />
 
 
-        </LinearLayout>
+    </LinearLayout>
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
