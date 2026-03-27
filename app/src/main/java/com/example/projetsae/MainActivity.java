@@ -27,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
     private GameModel model;
     private TableLayout table;
 
-    private LinearLayout overlay;
     private boolean enDrag = false;
     private int CELL_SIZE;
     private float debutX, debutY;
@@ -64,7 +63,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         table = findViewById(R.id.table);
-        overlay = findViewById(R.id.overlay);
         score = findViewById(R.id.score);
         coups = findViewById(R.id.coups);
 
@@ -154,8 +152,7 @@ public class MainActivity extends AppCompatActivity {
                                 float diffX = event.getRawX() - debutX;
                                 float diffY = event.getRawY() - debutY;
 
-                                if (overlay.getVisibility() == View.GONE) {
-
+                                if (!directionFixee) {
                                     if (Math.abs(diffX) > SEUIL || Math.abs(diffY) > SEUIL) {
 
                                         if (Math.abs(diffX) > Math.abs(diffY)) {
@@ -163,19 +160,11 @@ public class MainActivity extends AppCompatActivity {
                                         } else {
                                             modeHorizontal = false;
                                         }
+
                                         directionFixee = true;
-                                        creerOverlay();
-                                        }
-
-
-                                }
-                                if (directionFixee) {
-                                    if (modeHorizontal) {
-                                        overlay.setTranslationX(diffX);
-                                    } else {
-                                        overlay.setTranslationY(diffY);
                                     }
                                 }
+                                
 
                                 return true;
 
@@ -223,10 +212,7 @@ public class MainActivity extends AppCompatActivity {
                                     model.restaurerGrille(sauvegarde); // aucun alignement → on annule
                                 }
 
-                                overlay.setVisibility(View.GONE);
-                                overlay.removeAllViews();
-                                overlay.setTranslationX(0);
-                                overlay.setTranslationY(0);
+                                
                                 directionFixee = false;
                                 modeHorizontal = false;
 
@@ -327,7 +313,13 @@ public class MainActivity extends AppCompatActivity {
                                 aSupprimer[li][lj] = true; // sinon suppression normale
                             }
                         }
-                        ajouterScore(count, combo);
+                        int gain = ajouterScore(count);
+
+                        double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                        gain = (int) (gain * bonus);
+
+                        le_score += gain;
+                        score.setText("Score : " + le_score);
                         aEuSuppresion = true;
                     }
                     count = 1;
@@ -344,7 +336,13 @@ public class MainActivity extends AppCompatActivity {
                         aSupprimer[li][lj] = true; // suppression normale
                     }
                 }
-                ajouterScore(count, combo);
+                int gain = ajouterScore(count);
+
+                double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                gain = (int) (gain * bonus);
+
+                le_score += gain;
+                score.setText("Score : " + le_score);
                 aEuSuppresion = true;
             }
         }
@@ -367,7 +365,14 @@ public class MainActivity extends AppCompatActivity {
                                 aSupprimer[li][lj] = true; // suppression normale
                             }
                         }
-                        ajouterScore(count, combo);
+                        
+                        int gain = ajouterScore(count);
+
+                        double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                        gain = (int) (gain * bonus);
+
+                        le_score += gain;
+                        score.setText("Score : " + le_score);
                         aEuSuppresion = true;
                     }
                     count = 1;
@@ -384,7 +389,13 @@ public class MainActivity extends AppCompatActivity {
                         aSupprimer[li][lj] = true; // suppression normale
                     }
                 }
-                ajouterScore(count, combo);
+                int gain = ajouterScore(count);
+
+                double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                gain = (int) (gain * bonus);
+
+                le_score += gain;
+                score.setText("Score : " + le_score);
                 aEuSuppresion = true;
             }
         }
@@ -433,167 +444,12 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void ajouterScore(int nb, int combo) {
-        int points;
-        if (nb == 3) points = 8;
-        else if (nb == 4) points = 16;
-        else if (nb == 5) points = 32;
-        else points = 64;
-
-        if (combo > 1){
-            double bonus = 1 + 0.5 * (combo - 1);
-            points = (int) Math.round(points*bonus);
-        }
-
-        le_score += points;
-        score.setText("Score : " + le_score);
+    private void ajouterScore(int nb) {
+        if (nb == 3) return 8;
+        if (nb == 4) return 16;
+        if (nb == 5) return 32;
+        return 64;
     }
 
-    private void creerOverlay() {
-        overlay.removeAllViews();
-
-        int tableX = table.getLeft();
-        int tableY = table.getTop();
-
-        if (modeHorizontal) {
-            overlay.setOrientation(LinearLayout.HORIZONTAL);
-
-            TableRow row = (TableRow) table.getChildAt(ligneSelectionnee);
-
-            overlay.setX(tableX);
-            overlay.setY(tableY + row.getTop());
-
-            for (int j = 0; j < row.getChildCount(); j++) {
-                ImageView original = (ImageView) row.getChildAt(j);
-                ImageView copy = new ImageView(this);
-                copy.setImageDrawable(original.getDrawable());
-                copy.setLayoutParams(original.getLayoutParams());
-                overlay.addView(copy);
-                original.setVisibility(View.INVISIBLE);
-            }
-
-        } else {
-            overlay.setOrientation(LinearLayout.VERTICAL);
-
-            TableRow firstRow = (TableRow) table.getChildAt(0);
-            View firstCell = firstRow.getChildAt(colonneSelectionnee);
-
-            overlay.setX(tableX + firstCell.getLeft());
-            overlay.setY(tableY);
-
-            int currentY = 0;
-            for (int i = 0; i < table.getChildCount(); i++) {
-                TableRow row = (TableRow) table.getChildAt(i);
-                ImageView original = (ImageView) row.getChildAt(colonneSelectionnee);
-                ImageView copy = new ImageView(this);
-                copy.setImageDrawable(original.getDrawable());
-
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    original.getWidth(),
-                    original.getHeight()
-                );
-                copy.setLayoutParams(params);
-                overlay.addView(copy);
-                original.setVisibility(View.INVISIBLE);
-            }
-            overlay.setY(table.getTop());
-        }
-
-        overlay.setVisibility(View.VISIBLE);
-    }
-    /*private void creerOverlay() {
-
-        overlay.removeAllViews();
-
-        if (modeHorizontal) {
-
-            overlay.setOrientation(LinearLayout.HORIZONTAL);
-
-            TableRow row = (TableRow) table.getChildAt(ligneSelectionnee);
-
-            View firstCell = row.getChildAt(0);
-
-            int[] loc = new int[2];
-            firstCell.getLocationOnScreen(loc);
-
-            int[] tablePos = new int[2];
-            table.getLocationOnScreen(tablePos);
-
-            float posX = tablePos[0] + loc[0];
-            float posY = loc[1];
-
-            overlay.setX(posX);
-            overlay.setY(posY);
-
-            for (int j = 0; j < row.getChildCount(); j++) {
-
-                ImageView original = (ImageView) row.getChildAt(j);
-
-                ImageView copy = new ImageView(this);
-                copy.setImageDrawable(original.getDrawable());
-                copy.setLayoutParams(original.getLayoutParams());
-
-                overlay.addView(copy);
-
-                original.setVisibility(View.INVISIBLE);
-            }
-
-        } else {
-
-
-
-            overlay.setOrientation(LinearLayout.VERTICAL);
-            // récupérer la position X de la colonne sélectionnée
-            TableRow firstRow = (TableRow) table.getChildAt(0);
-            View firstCell = firstRow.getChildAt(colonneSelectionnee);
-
-            int[] loc = new int[2];
-            firstCell.getLocationOnScreen(loc);
-            int[] tablePos = new int[2];
-            table.getLocationOnScreen(tablePos);
-            float posX = loc[0];
-            float posY = tablePos[1] - loc[1];
-
-
-
-            overlay.setX(posX); // positionner l'overlay sur la bonne colonne
-            overlay.setY(posY);
-
-            for (int i = 0; i < table.getChildCount(); i++) {
-
-                TableRow row = (TableRow) table.getChildAt(i);
-                ImageView original = (ImageView) row.getChildAt(colonneSelectionnee);
-
-                ImageView copy = new ImageView(this);
-                copy.setImageDrawable(original.getDrawable());
-                copy.setLayoutParams(original.getLayoutParams());
-
-                overlay.addView(copy);
-
-                original.setVisibility(View.INVISIBLE);
-            }
-        }
-
-        overlay.setVisibility(View.VISIBLE);
-
-
-    }*/
-
-/* A mettre à la fin d'une partie
-
-
-SharedPreferences prefs = getSharedPreferences("saves", MODE_PRIVATE);
-SharedPreferences.Editor editor = prefs.edit();
-
-// récupérer nombre de parties déjà sauvegardées
-int nb = prefs.getInt("nbParties", 0);
-
-// sauvegarder la seed
-editor.putLong("seed_" + nb, seed);
-
-// incrémenter compteur
-editor.putInt("nbParties", nb + 1);
-
-editor.apply();
-*/
+    
 }
