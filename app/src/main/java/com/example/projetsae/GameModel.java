@@ -10,14 +10,32 @@ public class GameModel {
         //pour les cases speciales !!
         private int[][] couleurCachee = new int[6][6]; // couleur sous Mystere/Persistante
         private int[][] resistance = new int[6][6];     // 3 pour Persistante, 0 sinon
+        private boolean modeHard;
 
     public GameModel() {
+        this.modeHard = false;
         seed = Math.abs(new Random().nextLong()); // on génère la graine de la partie + peut que etre positif
         rand = new Random(seed);        // on crée le Random avec cette graine
         genererGrilleInitiale();
     }
 
     public GameModel(long graineFournie) {
+        this.modeHard = false;
+        seed = graineFournie;
+        rand = new Random(seed);
+        genererGrilleInitiale();
+    }
+
+    // constructeurs avec modeHard
+    public GameModel(boolean modeHard) {
+        this.modeHard = modeHard;
+        seed = Math.abs(new Random().nextLong());
+        rand = new Random(seed);
+        genererGrilleInitiale();
+    }
+
+    public GameModel(long graineFournie, boolean modeHard) {
+        this.modeHard = modeHard;
         seed = graineFournie;
         rand = new Random(seed);
         genererGrilleInitiale();
@@ -27,15 +45,17 @@ public class GameModel {
 
     //genere aussi cases speciales
     public int prochaineCouleur(int i, int j) { //c'est la mm graine qui sera reutilisee
-        double r = rand.nextDouble();
-        if (r < 0.05) { //5% de chances d'apparaitre sinon trop frequent
-            couleurCachee[i][j] = rand.nextInt(7);
-            return -1; // case mystère
-        }
-        if (r < 0.1) { //5% de chances d'apparaitre sinon trop frequent
-            couleurCachee[i][j] = rand.nextInt(7);
-            resistance[i][j] = 3;
-            return -2; // case persistante
+        if (modeHard) {
+            double r = rand.nextDouble();
+            if (r < 0.05) { //5% de chances d'apparaitre sinon trop frequent
+                couleurCachee[i][j] = rand.nextInt(7);
+                return -1; // case mystère
+            }
+            if (r < 0.1) { //5% de chances d'apparaitre sinon trop frequent
+                couleurCachee[i][j] = rand.nextInt(7);
+                resistance[i][j] = 3;
+                return -2; // case persistante
+            }
         }
             return rand.nextInt(7); //90% de chances pour le reste
         }

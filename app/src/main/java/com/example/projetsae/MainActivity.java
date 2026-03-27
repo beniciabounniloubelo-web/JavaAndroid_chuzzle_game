@@ -13,7 +13,7 @@ import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-
+import android.widget.CheckBox;
 
 import androidx.activity.OnBackPressedCallback;
 import androidx.appcompat.app.AppCompatActivity;
@@ -62,29 +62,48 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String seedExtra = getIntent().getStringExtra("seed");
-        if (seedExtra != null) {
-            modelDestine = true;
-            la_graine = Long.parseLong(seedExtra);
-            model = new GameModel(la_graine); // mode destinée
-        } else {
-            modelDestine = false;
-            model = new GameModel();          // mode normal
-            la_graine = model.getGraine();
-        }
+
         table = findViewById(R.id.table);
         overlay = findViewById(R.id.overlay);
         score = findViewById(R.id.score);
         coups = findViewById(R.id.coups);
 
-        afficherGrille();
-        table.post(() -> {
-            TableRow row = (TableRow) table.getChildAt(0);
-            View v = row.getChildAt(0);
-            CELL_SIZE = v.getWidth();
-        });
+        String seedExtra = getIntent().getStringExtra("seed");
+        if (seedExtra != null) {
+            modelDestine = true;
+            la_graine = Long.parseLong(seedExtra);
+        } else {
+            modelDestine = false;
+        }
 
+        afficherDialogLancement();
+    }
 
+    private void afficherDialogLancement() {
+        CheckBox checkHard = new CheckBox(this);
+        checkHard.setText("Mode Hard");
+        checkHard.setPadding(40, 20, 40, 20);
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Nouvelle partie")
+                .setView(checkHard)
+                .setCancelable(false)
+                .setPositiveButton("Jouer", (dialog, which) -> {
+                    boolean modeHard = checkHard.isChecked();
+                    if (modelDestine) {
+                        model = new GameModel(la_graine, modeHard);
+                    } else {
+                        model = new GameModel(modeHard);
+                        la_graine = model.getGraine();
+                    }
+                    afficherGrille();
+                    table.post(() -> {
+                        TableRow row = (TableRow) table.getChildAt(0);
+                        View v = row.getChildAt(0);
+                        CELL_SIZE = v.getWidth();
+                    });
+                })
+                .show();
     }
 
     private void afficherGrille() {
@@ -99,10 +118,10 @@ public class MainActivity extends AppCompatActivity {
                 ImageView img = new ImageView(this);
                 int val = model.getCase(i, j);
                 if (val == -1) img.setForeground(ContextCompat.getDrawable(this, R.drawable.cmystere)); //pour les case mysteres
-                else if (val == -2) {
+                /*else if (val == -2) {
                     img.setImageResource(images[model.getCouleurCachee(i, j)]); // couleur en fond
                     img.setForeground(ContextCompat.getDrawable(this, R.drawable.cpersistante)); //pour es cases persistantes
-                }
+                }*/
                 else {
                     img.setImageResource(images[val]);
                     img.setForeground(null); // important : effacer le foreground des cases normales
