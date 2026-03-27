@@ -444,7 +444,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private void ajouterScore(int nb) {
+    private int ajouterScore(int nb) {
         if (nb == 3) return 8;
         if (nb == 4) return 16;
         if (nb == 5) return 32;
