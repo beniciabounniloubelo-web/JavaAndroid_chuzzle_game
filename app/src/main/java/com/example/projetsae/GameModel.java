@@ -19,11 +19,14 @@ public class GameModel {
         genererGrilleInitiale();
     }
 
-    public GameModel(long graineFournie) {
-        this.modeHard = false;
-        seed = graineFournie;
-        rand = new Random(seed);
-        genererGrilleInitiale();
+    public int[] getCouleurCacheeLigne(int i) { return couleurCachee[i].clone(); }
+    public int[] getResistanceLigne(int i) { return resistance[i].clone(); }
+    public boolean isModeHard() { return modeHard; }
+    public void restaurerCouleurCachee(int[][] sauvegarde) {
+        for (int i = 0; i < 6; i++) couleurCachee[i] = sauvegarde[i].clone();
+    }
+    public void restaurerResistance(int[][] sauvegarde) {
+        for (int i = 0; i < 6; i++) resistance[i] = sauvegarde[i].clone();
     }
 
     // constructeurs avec modeHard

@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
             R.drawable.cmystere
     };
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,15 +68,47 @@ public class MainActivity extends AppCompatActivity {
         score = findViewById(R.id.score);
         coups = findViewById(R.id.coups);
 
-        String seedExtra = getIntent().getStringExtra("seed");
-        if (seedExtra != null) {
-            modelDestine = true;
-            la_graine = Long.parseLong(seedExtra);
-        } else {
-            modelDestine = false;
-        }
+        if (savedInstanceState != null) {
+            // --- Restaurer la partie ---
+            le_score = savedInstanceState.getInt("score");
+            nbCoups = savedInstanceState.getInt("nbCoups");
+            la_graine = savedInstanceState.getLong("graine");
+            boolean modeHard = savedInstanceState.getBoolean("modeHard");
 
-        afficherDialogLancement();
+            // Créer le modèle avec la graine existante
+            model = new GameModel(la_graine, modeHard);
+
+            // Restaurer la grille
+            int[][] grille = new int[6][6];
+            int[][] couleurCachee = new int[6][6];
+            int[][] resistance = new int[6][6];
+
+            for (int i = 0; i < 6; i++) {
+                grille[i] = savedInstanceState.getIntArray("grille_" + i);
+                couleurCachee[i] = savedInstanceState.getIntArray("couleurCachee_" + i);
+                resistance[i] = savedInstanceState.getIntArray("resistance_" + i);
+            }
+
+            model.restaurerGrille(grille);
+            model.restaurerCouleurCachee(couleurCachee);
+            model.restaurerResistance(resistance);
+
+            score.setText("Score : " + le_score);
+            coups.setText("nombre de coups : " + nbCoups);
+            afficherGrille();
+
+        } else {
+            // --- Nouvelle partie normale ---
+            String seedExtra = getIntent().getStringExtra("seed");
+            if (seedExtra != null) {
+                modelDestine = true;
+                la_graine = Long.parseLong(seedExtra);
+            } else {
+                modelDestine = false;
+            }
+
+            afficherDialogLancement();
+        }
     }
 
     private void afficherDialogLancement() {
@@ -246,7 +280,9 @@ public class MainActivity extends AppCompatActivity {
                                                 .setMessage("Aucun coup possible.\nScore final : " + le_score+"\nGraine de la partie : "+ la_graine)
                                                 .setPositiveButton("Rejouer", (dialog, which) -> { //soit on rejoue et tt est remis a 0
                                                     if (modelDestine) {
-                                                        model = new GameModel(la_graine); // même graine
+                                                        boolean modeHard = model.isModeHard();
+                                                        model = new GameModel(la_graine, modeHard);
+                                                        // même graine
                                                     } else {
                                                         model = new GameModel();          // nouvelle graine aléatoire
                                                         la_graine = model.getGraine();
@@ -451,5 +487,26 @@ public class MainActivity extends AppCompatActivity {
         return 64;
     }
 
-    
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Grille principale
+        int[][] grille = model.getGrille();
+        for (int i = 0; i < 6; i++) outState.putIntArray("grille_" + i, grille[i]);
+
+        // Couleur cachée et résistances
+        for (int i = 0; i < 6; i++) {
+            outState.putIntArray("couleurCachee_" + i, model.getCouleurCacheeLigne(i));
+            outState.putIntArray("resistance_" + i, model.getResistanceLigne(i));
+        }
+
+        // Score et coups
+        outState.putInt("score", le_score);
+        outState.putInt("nbCoups", nbCoups);
+
+        // Graine et mode hard
+        outState.putLong("graine", la_graine);
+        outState.putBoolean("modeHard", model.isModeHard());
+    }
 }
