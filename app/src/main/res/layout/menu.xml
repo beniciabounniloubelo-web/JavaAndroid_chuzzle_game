@@ -54,33 +54,25 @@
 
 
     </LinearLayout>
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_alignParentBottom="true"
-            android:layout_marginBottom="70dp"
 
-            >
-            <Button
-                android:layout_width="134dp"
-                android:layout_height="60dp"
-                android:text="Règles du jeu"
-                android:textColor="@color/black"
-                android:id="@+id/regles"
-                android:backgroundTint="@color/rose_fonce"
-                android:layout_marginLeft="@android:dimen/app_icon_size"
-                android:layout_marginRight="@android:dimen/app_icon_size"
-                />
-            <Button
-                android:layout_width="134dp"
-                android:layout_height="60dp"
-                android:id="@+id/quitter"
-                android:text="Quitter"
-                android:textColor="@color/black"
-                android:backgroundTint="@color/rose_fonce"
-                
-                android:layout_marginRight="@android:dimen/app_icon_size"/>
-        </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="67dp"
+        android:orientation="horizontal"
+
+        >
+
+        <Button
+            android:id="@+id/regles"
+            android:layout_width="134dp"
+            android:layout_height="60dp"
+            android:layout_marginLeft="@android:dimen/app_icon_size"
+            android:layout_marginRight="@android:dimen/app_icon_size"
+            android:backgroundTint="@color/rose_fonce"
+            android:text="Règles du jeu"
+            android:textColor="@color/black" />
+    </LinearLayout>
 
 </RelativeLayout>
