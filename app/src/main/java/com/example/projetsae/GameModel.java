@@ -1,5 +1,7 @@
 package com.example.projetsae;
 
+import android.util.Log;
+
 import java.util.Random;
 
 public class GameModel {
@@ -21,6 +23,8 @@ public class GameModel {
 
     public int[] getCouleurCacheeLigne(int i) { return couleurCachee[i].clone(); }
     public int[] getResistanceLigne(int i) { return resistance[i].clone(); }
+
+    public int[][] getCouleurCachee() { return couleurCachee; }
     public boolean isModeHard() { return modeHard; }
     public void restaurerCouleurCachee(int[][] sauvegarde) {
         for (int i = 0; i < 6; i++) couleurCachee[i] = sauvegarde[i].clone();
@@ -64,11 +68,13 @@ public class GameModel {
             double r = rand.nextDouble();
             if (r < 0.05) { //5% de chances d'apparaitre sinon trop frequent
                 couleurCachee[i][j] = rand.nextInt(7);
+                Log.d("GENCASE", "mystere generee en ["+i+"]["+j+"]");
                 return -1; // case mystère
             }
             if (r < 0.1) { //5% de chances d'apparaitre sinon trop frequent
                 couleurCachee[i][j] = rand.nextInt(7);
                 resistance[i][j] = 3;
+                Log.d("GENCASE", "persistante generee en ["+i+"]["+j+"] resist="+resistance[i][j]);
                 return -2; // case persistante
             }
         }
@@ -220,7 +226,7 @@ public class GameModel {
     public int[][] getGrille() { return grille; }
 
     //pareil que verifierAlignement mais sans modifier la grille
-    public boolean aUnAlignement(int[][] g) {
+    /*public boolean aUnAlignement(int[][] g) {
         // Horizontal
         for (int i = 0; i < 6; i++) {
             int count = 1;
@@ -246,6 +252,38 @@ public class GameModel {
             }
         }
         return false;
+    }*/
+
+    public boolean aUnAlignement(int[][] g, int[][] couleurCachee) {
+        // Horizontal
+        for (int i = 0; i < 6; i++) {
+            int count = 1;
+            for (int j = 1; j < 6; j++) {
+                int c1 = g[i][j] < 0 ? couleurCachee[i][j] : g[i][j];
+                int c2 = g[i][j-1] < 0 ? couleurCachee[i][j-1] : g[i][j-1];
+                if (c1 == c2) {
+                    count++;
+                    if (count >= 3) return true;
+                } else {
+                    count = 1;
+                }
+            }
+        }
+        // Vertical
+        for (int j = 0; j < 6; j++) {
+            int count = 1;
+            for (int i = 1; i < 6; i++) {
+                int c1 = g[i][j] < 0 ? couleurCachee[i][j] : g[i][j];
+                int c2 = g[i-1][j] < 0 ? couleurCachee[i-1][j] : g[i-1][j];
+                if (c1 == c2) {
+                    count++;
+                    if (count >= 3) return true;
+                } else {
+                    count = 1;
+                }
+            }
+        }
+        return false;
     }
 
     public boolean aucunCoupPossible() {
@@ -260,7 +298,7 @@ public class GameModel {
                     for (int j = 5; j > 0; j--) copie[i][j] = copie[i][j - 1];
                     copie[i][0] = temp;
                 }
-                if (aUnAlignement(copie)) return false;
+                if (aUnAlignement(copie, couleurCachee)) return false;
             }
         }
 
@@ -274,7 +312,7 @@ public class GameModel {
                     for (int i = 5; i > 0; i--) copie[i][j] = copie[i - 1][j];
                     copie[0][j] = temp;
                 }
-                if (aUnAlignement(copie)) return false;
+                if (aUnAlignement(copie, couleurCachee)) return false;
             }
         }
 

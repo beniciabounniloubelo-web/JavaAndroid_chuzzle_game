@@ -154,9 +154,14 @@ public class MainActivity extends AppCompatActivity {
                     img.setImageResource(images[model.getCouleurCachee(i, j)]); // couleur en fond
                     img.setForeground(ContextCompat.getDrawable(this, R.drawable.cpersistante)); //pour es cases persistantes
                 }
-                else {
+                else if (val >= 0 && val <= 6) {
                     img.setImageResource(images[val]);
                     img.setForeground(null); // important : effacer le foreground des cases normales
+                }
+                else {
+                    // valeur inattendue, on met une case vide pour éviter le crash
+                    img.setImageResource(0);
+                    img.setForeground(null);
                 }
                 //img.setForeground(ContextCompat.getDrawable(this, R.drawable.cverrou)); //pour mettre les verrous
                 img.setLayoutParams(new TableRow.LayoutParams(100, 100));
@@ -211,7 +216,14 @@ public class MainActivity extends AppCompatActivity {
 
                                 boolean mouvementFait = false;
 
-                                int[][] sauvegarde = model.sauvegarderGrille(); //histoire de se rappeler de la gille avant un mouv
+                                //histoire de se rappeler de la grille avant un mouv
+                                int[][] sauvegarde = model.sauvegarderGrille();
+                                int[][] sauvegardeCouleur = new int[6][6];
+                                int[][] sauvegardeResistance = new int[6][6];
+                                for (int o = 0; o < 6; o++) {
+                                    sauvegardeCouleur[o] = model.getCouleurCacheeLigne(o);
+                                    sauvegardeResistance[o] = model.getResistanceLigne(o);
+                                }
 
                                 if (modeHorizontal) {
                                     int deplacement = Math.round(finalX / CELL_SIZE);
@@ -239,12 +251,25 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
 
+                                for (int ii = 0; ii < 6; ii++)
+                                    for (int jj = 0; jj < 6; jj++)
+                                        if (model.getCase(ii,jj) == -2)
+                                            Log.d("PERSIST", "persistante en ["+ii+"]["+jj+"] resist="+model.getResistance(ii,jj));
+
                                 // vérifier si le déplacement crée un alignement
-                                if (model.aUnAlignement(model.getGrille())) {
+                                if (model.aUnAlignement(model.getGrille(), model.getCouleurCachee())) {
                                     mouvementFait = true;
                                 } else {
-                                    model.restaurerGrille(sauvegarde); // aucun alignement → on annule
+                                    // restaurer tout
+                                    model.restaurerGrille(sauvegarde);
+                                    model.restaurerCouleurCachee(sauvegardeCouleur);
+                                    model.restaurerResistance(sauvegardeResistance);
                                 }
+
+                                directionFixee = false;
+                                modeHorizontal = false;
+                                enDrag = false;
+                                afficherGrille();
 
                                 
                                 directionFixee = false;
@@ -331,124 +356,143 @@ public class MainActivity extends AppCompatActivity {
             boolean[][] aResister = new boolean[6][6];
             aEuSuppresion = false;
 
-        // 1) détecter alignements horizontaux
-        for (int i = 0; i < 6; i++) {
-            int count = 1;
-            for (int j = 1; j < 6; j++) {
-                if (couleurEffective(i,j) == couleurEffective(i,j-1)) {
-                    count++;
-                } else {
-                    if (count >= 3) {
-                        for (int k = 0; k < count; k++) {
-                            int li = i, lj = j-1-k;
-                            if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) { //si resistance, la diminue de 1
-                                aResister[li][lj] = true;
-                            } else if (model.getCase(li,lj) == -1) {
-                                model.setCase(li, lj, model.getCouleurCachee(li, lj)); // si mystere, revele la couleur
-                            } else {
-                                aSupprimer[li][lj] = true; // sinon suppression normale
-                            }
-                        }
-                        int gain = ajouterScore(count);
-
-                        double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                        gain = (int) (gain * bonus);
-
-                        le_score += gain;
-                        score.setText("Score : " + le_score);
-                        aEuSuppresion = true;
-                    }
-                    count = 1;
-                }
-            }
-            if (count >= 3) {
-                for (int k = 0; k < count; k++) {
-                    int li = i, lj = 6-1-k;
-                    if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
-                        aResister[li][lj] = true;
-                    } else if (model.getCase(li,lj) == -1) {
-                        model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+            // 1) détecter alignements horizontaux
+            for (int i = 0; i < 6; i++) {
+                int count = 1;
+                for (int j = 1; j < 6; j++) {
+                    if (couleurEffective(i, j) == couleurEffective(i, j - 1)) {
+                        count++;
                     } else {
-                        aSupprimer[li][lj] = true; // suppression normale
-                    }
-                }
-                int gain = ajouterScore(count);
-
-                double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                gain = (int) (gain * bonus);
-
-                le_score += gain;
-                score.setText("Score : " + le_score);
-                aEuSuppresion = true;
-            }
-        }
-
-        // 2) détecter alignements verticaux
-        for (int j = 0; j < 6; j++) {
-            int count = 1;
-            for (int i = 1; i < 6; i++) {
-                if (couleurEffective(i,j) == couleurEffective(i-1,j)) {
-                    count++;
-                } else {
-                    if (count >= 3) {
-                        for (int k = 0; k < count; k++) {
-                            int li = i-1-k, lj = j;
-                            if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
+                        if (count >= 3) {
+                            for (int k = 0; k < count; k++) {
+                                int li = i, lj = j - 1 - k;
+                            if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) { //si resistance, la diminue de 1
                                 aResister[li][lj] = true;
-                            } else if (model.getCase(li,lj) == -1) {
-                                model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
-                            } else {
-                                aSupprimer[li][lj] = true; // suppression normale
+                            } else
+                                if (model.getCase(li, lj) == -1) {
+                                    model.setCase(li, lj, model.getCouleurCachee(li, lj)); // si mystere, revele la couleur
+                                } else {
+                                    aSupprimer[li][lj] = true; // sinon suppression normale
+                                }
                             }
+                            int gain = ajouterScore(count);
+
+                            double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                            gain = (int) (gain * bonus);
+
+                            le_score += gain;
+                            score.setText("Score : " + le_score);
+                            aEuSuppresion = true;
                         }
-                        
-                        int gain = ajouterScore(count);
-
-                        double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                        gain = (int) (gain * bonus);
-
-                        le_score += gain;
-                        score.setText("Score : " + le_score);
-                        aEuSuppresion = true;
+                        count = 1;
                     }
-                    count = 1;
                 }
-            }
-            if (count >= 3) {
-                for (int k = 0; k < count; k++) {
-                    int li = 6-1-k, lj = j;
-                    if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 1) {
+                if (count >= 3) {
+                    for (int k = 0; k < count; k++) {
+                        int li = i, lj = 6 - 1 - k;
+                    if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) {
                         aResister[li][lj] = true;
-                    } else if (model.getCase(li,lj) == -1) {
-                        model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+                    } else
+                        if (model.getCase(li, lj) == -1) {
+                            model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+                        } else {
+                            aSupprimer[li][lj] = true; // suppression normale
+                        }
+                    }
+                    int gain = ajouterScore(count);
+
+                    double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                    gain = (int) (gain * bonus);
+
+                    le_score += gain;
+                    score.setText("Score : " + le_score);
+                    aEuSuppresion = true;
+                }
+            }
+
+            // 2) détecter alignements verticaux
+            for (int j = 0; j < 6; j++) {
+                int count = 1;
+                for (int i = 1; i < 6; i++) {
+                    if (couleurEffective(i, j) == couleurEffective(i - 1, j)) {
+                        count++;
                     } else {
-                        aSupprimer[li][lj] = true; // suppression normale
+                        if (count >= 3) {
+                            for (int k = 0; k < count; k++) {
+                                int li = i - 1 - k, lj = j;
+                            if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) {
+                                aResister[li][lj] = true;
+                            } else
+                                if (model.getCase(li, lj) == -1) {
+                                    model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+                                } else {
+                                    aSupprimer[li][lj] = true; // suppression normale
+                                }
+                            }
+
+                            int gain = ajouterScore(count);
+
+                            double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                            gain = (int) (gain * bonus);
+
+                            le_score += gain;
+                            score.setText("Score : " + le_score);
+                            aEuSuppresion = true;
+                        }
+                        count = 1;
                     }
                 }
-                int gain = ajouterScore(count);
+                if (count >= 3) {
+                    for (int k = 0; k < count; k++) {
+                        int li = 6 - 1 - k, lj = j;
+                    if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) {
+                        aResister[li][lj] = true;
+                    } else
+                        if (model.getCase(li, lj) == -1) {
+                            model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
+                        } else {
+                            aSupprimer[li][lj] = true; // suppression normale
+                        }
+                    }
+                    int gain = ajouterScore(count);
 
-                double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                gain = (int) (gain * bonus);
+                    double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
+                    gain = (int) (gain * bonus);
 
-                le_score += gain;
-                score.setText("Score : " + le_score);
-                aEuSuppresion = true;
+                    le_score += gain;
+                    score.setText("Score : " + le_score);
+                    aEuSuppresion = true;
+                }
             }
-        }
 
-        // 3) appliquer le s resistances une seule fois
+            // 3a) appliquer le s resistances une seule fois
             for (int i = 0; i < 6; i++) {
                 for (int j = 0; j < 6; j++) {
                     if (aResister[i][j]) {
+                        Log.d("RESIST", "case ["+i+"]["+j+"] résistance AVANT="+model.getResistance(i,j));
                         model.setResistance(i, j, model.getResistance(i, j) - 1);
+                        Log.d("RESIST", "case ["+i+"]["+j+"] résistance APRES="+model.getResistance(i,j));
                         if (model.getResistance(i, j) == 0) {
-                            aSupprimer[i][j] = true; // résistance épuisée, on supprime
+                            Log.d("RESIST0", "case ["+i+"]["+j+"] résistance=0, sera supprimée="+aResister[i][j]);
+                            aSupprimer[i][j] = true;
                         }
                         aEuSuppresion = true;
                     }
                 }
             }
-        // 4) faire tomber les cases et remplir les vides
+/*
+            // 3b) supprimer les persistantes dont la résistance est déjà 0
+            for (int i = 0; i < 6; i++) {
+                for (int j = 0; j < 6; j++) {
+                    if (model.getCase(i, j) == -2 && model.getResistance(i, j) == 0) {
+                        aSupprimer[i][j] = true;
+                        aEuSuppresion = true;
+                    }
+                }
+            }
+*/
+
+            // 4) faire tomber les cases et remplir les vides
             if (aEuSuppresion) {
                 for (int j = 0; j < 6; j++) {
                     int vide = 0;
@@ -456,22 +500,37 @@ public class MainActivity extends AppCompatActivity {
                         if (aSupprimer[i][j]) {
                             vide++;
                         } else if (vide > 0) {
-                            model.setCase(i + vide, j, model.getCase(i, j));
+                            int valCase = model.getCase(i, j);
+                            int resist = model.getResistance(i, j);
+
+                            // si c'est une persistante épuisée, on la supprime plutôt que de la déplacer
+                            if (valCase == -2 && resist == 0) {
+                                vide++; // on l'ajoute aux vides
+                            } else {
+                                model.setCase(i + vide, j, valCase);
+                                model.setCouleurCachee(i + vide, j, model.getCouleurCachee(i, j));
+                                model.setResistance(i + vide, j, resist);
+                                model.setCase(i, j, 0);
+                                model.setCouleurCachee(i, j, 0);
+                                model.setResistance(i, j, 0);
+                            }
                         }
                     }
                     // nouvelles cases en haut
                     for (int i = 0; i < vide; i++) {
-                        model.setCase(i, j, model.prochaineCouleur(i, j)); //pour que la graine reste la meme
-                        if (i + vide < 6) { // vérification avant d'accéder
-                            model.setCouleurCachee(i + vide, j, model.getCouleurCachee(i, j)); // comme ça quand une Persistante glisse vers le bas elle garde sa couleur cachée et sa résistance
-                            model.setResistance(i + vide, j, model.getResistance(i, j));
+                        int nouvelleCouleur = model.prochaineCouleur(i, j);
+                        model.setCase(i, j, nouvelleCouleur);
+                        if (nouvelleCouleur >= 0) {
+                            // case normale : on remet à zéro
+                            model.setCouleurCachee(i, j, 0);
+                            model.setResistance(i, j, 0);
                         }
+                        // si -1 ou -2 : prochaineCouleur a déjà rempli couleurCachee et resistance, on ne touche pas
                     }
                 }
                 combo++;
             }
         } while (aEuSuppresion);
-
         // ajouterScore(scoreGagne);
         return scoreGagne;
     }
