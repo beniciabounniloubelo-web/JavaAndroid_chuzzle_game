@@ -1,97 +1,80 @@
 package com.example.projetsae;
 
-import android.content.SharedPreferences;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
-import android.widget.CheckBox;
 
-import androidx.activity.OnBackPressedCallback;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
-
-import java.util.Random;
-
 
 public class MainActivity extends AppCompatActivity {
 
-    private GameModel model;
-    private TableLayout table;
+    private GameController controller;
 
+    private TableLayout table;
     private boolean enDrag = false;
     private int CELL_SIZE;
     private float debutX, debutY;
     private boolean modeHorizontal;
 
-    private boolean modelDestine = false;
     private final int SEUIL = 50;
     private int ligneSelectionnee;
     private int colonneSelectionnee;
-
-    private int le_score = 0;
-
-    private long la_graine;
-    private TextView score;
     private boolean directionFixee = false;
-    private int nbCoups = 0;
+
+    private TextView score;
     private TextView coups;
 
+    private LinearLayout bandeauFin;
+    private TextView bandeauScore;
+    private TextView bandeauGraine;
+    private Button bandeauBtnRejouer;
+    private Button bandeauBtnMenu;
+
     private int[] images = {
-            R.drawable.c1,
-            R.drawable.c2,
-            R.drawable.c3,
-            R.drawable.c4,
-            R.drawable.c5,
-            R.drawable.c6,
-            R.drawable.c7,
-            R.drawable.cpersistante,
-            R.drawable.cmystere
+            R.drawable.c1, R.drawable.c2, R.drawable.c3,
+            R.drawable.c4, R.drawable.c5, R.drawable.c6,
+            R.drawable.c7, R.drawable.cpersistante, R.drawable.cmystere
     };
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        table = findViewById(R.id.table);
-        score = findViewById(R.id.score);
-        coups = findViewById(R.id.coups);
+        table             = findViewById(R.id.table);
+        score             = findViewById(R.id.score);
+        coups             = findViewById(R.id.coups);
+        bandeauFin        = findViewById(R.id.bandeau_fin);
+        bandeauScore      = findViewById(R.id.bandeau_score);
+        bandeauGraine     = findViewById(R.id.bandeau_graine);
+        bandeauBtnRejouer = findViewById(R.id.bandeau_btn_rejouer);
+        bandeauBtnMenu    = findViewById(R.id.bandeau_btn_menu);
 
         if (savedInstanceState != null) {
-            // --- Restaurer la partie ---
-            le_score = savedInstanceState.getInt("score");
-            nbCoups = savedInstanceState.getInt("nbCoups");
-            la_graine = savedInstanceState.getLong("graine");
+            long graine      = savedInstanceState.getLong("graine");
             boolean modeHard = savedInstanceState.getBoolean("modeHard");
+            boolean destine  = savedInstanceState.getBoolean("destine");
 
-            // Créer le modèle avec la graine existante
-            model = new GameModel(la_graine, modeHard);
-
-            // Restaurer la grille
-            int[][] grille = new int[6][6];
+            GameModel model       = new GameModel(graine, modeHard);
+            int[][] grille        = new int[6][6];
             int[][] couleurCachee = new int[6][6];
-            int[][] resistance = new int[6][6];
-            boolean[][] verrous = new boolean[6][6];
+            int[][] resistance    = new int[6][6];
+            boolean[][] verrous   = new boolean[6][6];
 
             for (int i = 0; i < 6; i++) {
-                grille[i] = savedInstanceState.getIntArray("grille_" + i);
+                grille[i]        = savedInstanceState.getIntArray("grille_" + i);
                 couleurCachee[i] = savedInstanceState.getIntArray("couleurCachee_" + i);
-                resistance[i] = savedInstanceState.getIntArray("resistance_" + i);
-                int[] verrouInt = savedInstanceState.getIntArray("verrou_" + i);
+                resistance[i]    = savedInstanceState.getIntArray("resistance_" + i);
+                int[] verrouInt  = savedInstanceState.getIntArray("verrou_" + i);
                 for (int j = 0; j < 6; j++) verrous[i][j] = verrouInt[j] == 1;
             }
 
@@ -100,496 +83,188 @@ public class MainActivity extends AppCompatActivity {
             model.restaurerResistance(resistance);
             model.restaurerVerrous(verrous);
 
-            score.setText("Score : " + le_score);
-            coups.setText("nombre de coups : " + nbCoups);
+            controller = new GameController(model, graine, destine);
+            controller.setScore(savedInstanceState.getInt("score"));
+            controller.setNbCoups(savedInstanceState.getInt("nbCoups"));
+
+            mettreAJourAffichage();
             afficherGrille();
 
         } else {
-            // --- Nouvelle partie normale ---
+            boolean modeHard = getIntent().getBooleanExtra("modeHard", false);
             String seedExtra = getIntent().getStringExtra("seed");
+
+            GameModel model;
+            long graine;
+            boolean destine;
+
             if (seedExtra != null) {
-                modelDestine = true;
-                la_graine = Long.parseLong(seedExtra);
+                destine = true;
+                graine  = Long.parseLong(seedExtra);
+                model   = new GameModel(graine, modeHard);
             } else {
-                modelDestine = false;
+                destine = false;
+                model   = new GameModel(modeHard);
+                graine  = model.getGraine();
             }
 
-            afficherDialogLancement();
+            controller = new GameController(model, graine, destine);
+            afficherGrille();
+            table.post(() -> {
+                TableRow row = (TableRow) table.getChildAt(0);
+                View v = row.getChildAt(0);
+                CELL_SIZE = v.getWidth();
+            });
         }
     }
 
-    private void afficherDialogLancement() {
-        CheckBox checkHard = new CheckBox(this);
-        checkHard.setText("Mode Hard");
-        checkHard.setPadding(40, 20, 40, 20);
+    @Override
+    public void onBackPressed() { finish(); }
 
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Nouvelle partie")
-                .setView(checkHard)
-                .setCancelable(false)
-                .setPositiveButton("Jouer", (dialog, which) -> {
-                    boolean modeHard = checkHard.isChecked();
-                    if (modelDestine) {
-                        model = new GameModel(la_graine, modeHard);
-                    } else {
-                        model = new GameModel(modeHard);
-                        la_graine = model.getGraine();
-                    }
-                    afficherGrille();
-                    table.post(() -> {
-                        TableRow row = (TableRow) table.getChildAt(0);
-                        View v = row.getChildAt(0);
-                        CELL_SIZE = v.getWidth();
-                    });
-                })
-                .show();
+    private void mettreAJourAffichage() {
+        score.setText("Score : " + controller.getScore());
+        coups.setText("nombre de coups : " + controller.getNbCoups());
+    }
+
+    private void afficherBandeauFin() {
+        bandeauScore.setText("Score final : " + controller.getScore());
+        bandeauGraine.setText("Graine : " + controller.getGraine());
+        bandeauBtnRejouer.setOnClickListener(v -> {
+            bandeauFin.setVisibility(View.GONE);
+            controller.rejouer();
+            mettreAJourAffichage();
+            afficherGrille();
+        });
+        bandeauBtnMenu.setOnClickListener(v -> finish());
+        bandeauFin.setVisibility(View.VISIBLE);
+    }
+
+    private void resoudreEtVerifierFin() {
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            boolean continuer = true;
+            while (continuer) {
+                int avant = controller.getScore();
+                controller.verifierAlignements();
+                continuer = controller.getScore() > avant;
+            }
+            mettreAJourAffichage();
+            afficherGrille();
+
+            if (controller.getModel().aucunCoupPossible()) {
+                controller.sauvegarderPartie(MainActivity.this);
+                afficherBandeauFin();
+            }
+        }, 500);
     }
 
     private void afficherGrille() {
         table.removeAllViews();
+        GameModel model = controller.getModel();
 
         for (int i = 0; i < 6; i++) {
-
             TableRow row = new TableRow(this);
-
             for (int j = 0; j < 6; j++) {
-
                 ImageView img = new ImageView(this);
                 int val = model.getCase(i, j);
+
                 if (val == -1) {
-                    img.setForeground(ContextCompat.getDrawable(this, R.drawable.cmystere)); //pour les cases mysteres
+                    img.setForeground(getDrawable(R.drawable.cmystere));
                 } else if (val == -2) {
-                    img.setImageResource(images[model.getCouleurCachee(i, j)]); // couleur en fond
-                    img.setForeground(ContextCompat.getDrawable(this, R.drawable.cpersistante)); //pour les cases persistantes
+                    img.setImageResource(images[model.getCouleurCachee(i, j)]);
+                    img.setForeground(getDrawable(R.drawable.cpersistante));
                 } else if (val >= 0 && val <= 6) {
                     img.setImageResource(images[val]);
-                    img.setForeground(null); // important : effacer le foreground des cases normales
+                    img.setForeground(null);
                 } else {
-                    // valeur inattendue, on met une case vide pour éviter le crash
                     img.setImageResource(0);
                     img.setForeground(null);
                 }
-                // verrou par dessus tout
                 if (model.getVerrou(i, j)) {
-                    img.setForeground(ContextCompat.getDrawable(this, R.drawable.cverrou));
+                    img.setForeground(getDrawable(R.drawable.cverrou));
                 }
-                //img.setForeground(ContextCompat.getDrawable(this, R.drawable.cverrou)); //pour mettre les verrous
+
                 img.setLayoutParams(new TableRow.LayoutParams(100, 100));
-                final int ligne = i;
+                final int ligne   = i;
                 final int colonne = j;
 
                 img.setOnTouchListener((v, event) -> {
+                    if (bandeauFin.getVisibility() == View.VISIBLE) return true;
 
                     switch (event.getAction()) {
 
                         case MotionEvent.ACTION_DOWN:
-
-                            debutX = event.getRawX();
-                            debutY = event.getRawY();
-
-                            ligneSelectionnee = ligne;
+                            debutX              = event.getRawX();
+                            debutY              = event.getRawY();
+                            ligneSelectionnee   = ligne;
                             colonneSelectionnee = colonne;
-
-                            enDrag = true;
+                            enDrag              = true;
                             return true;
 
                         case MotionEvent.ACTION_MOVE:
-
                             if (!enDrag) return false;
-
                             float diffX = event.getRawX() - debutX;
                             float diffY = event.getRawY() - debutY;
-
                             if (!directionFixee) {
                                 if (Math.abs(diffX) > SEUIL || Math.abs(diffY) > SEUIL) {
-
-                                    if (Math.abs(diffX) > Math.abs(diffY)) {
-                                        modeHorizontal = true;
-                                    } else {
-                                        modeHorizontal = false;
-                                    }
-
+                                    modeHorizontal = Math.abs(diffX) > Math.abs(diffY);
                                     directionFixee = true;
                                 }
                             }
-
                             return true;
 
                         case MotionEvent.ACTION_UP:
-
                             if (!enDrag) return false;
 
                             float finalX = event.getRawX() - debutX;
                             float finalY = event.getRawY() - debutY;
 
-                            boolean mouvementFait = false;
-
-                            // vérifier si la ligne/colonne contient un verrou → bloquer le déplacement
-                            boolean ligneOuColonneVerrouillee = false;
-                            if (modeHorizontal) {
-                                for (int jj = 0; jj < 6; jj++) {
-                                    if (model.getVerrou(ligneSelectionnee, jj)) {
-                                        ligneOuColonneVerrouillee = true;
-                                        break;
-                                    }
-                                }
-                            } else {
-                                for (int ii = 0; ii < 6; ii++) {
-                                    if (model.getVerrou(ii, colonneSelectionnee)) {
-                                        ligneOuColonneVerrouillee = true;
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (ligneOuColonneVerrouillee) {
-                                directionFixee = false;
-                                modeHorizontal = false;
-                                enDrag = false;
-                                return true; // mouvement ignoré
-                            }
-
-                            //histoire de se rappeler de la grille avant un mouv
-                            int[][] sauvegarde = model.sauvegarderGrille();
-                            int[][] sauvegardeCouleur = new int[6][6];
-                            int[][] sauvegardeResistance = new int[6][6];
-                            boolean[][] sauvegardeVerrous = new boolean[6][6];
-                            for (int o = 0; o < 6; o++) {
-                                sauvegardeCouleur[o] = model.getCouleurCacheeLigne(o);
-                                sauvegardeResistance[o] = model.getResistanceLigne(o);
-                                sauvegardeVerrous[o] = model.getVerrouLigne(o);
-                            }
-
-                            if (modeHorizontal) {
-                                int deplacement = Math.round(finalX / CELL_SIZE);
-                                while (deplacement > 0) {
-                                    model.decalerLigneDroite(ligneSelectionnee);
-                                    deplacement--;
-                                    mouvementFait = true;
-                                }
-                                while (deplacement < 0) {
-                                    model.decalerLigneGauche(ligneSelectionnee);
-                                    deplacement++;
-                                    mouvementFait = true;
-                                }
-                            } else {
-                                int deplacement = Math.round(finalY / CELL_SIZE);
-                                while (deplacement > 0) {
-                                    model.decalerColonneBas(colonneSelectionnee);
-                                    deplacement--;
-                                    mouvementFait = true;
-                                }
-                                while (deplacement < 0) {
-                                    model.decalerColonneHaut(colonneSelectionnee);
-                                    deplacement++;
-                                    mouvementFait = true;
-                                }
-                            }
-
-                            // vérifier si le déplacement crée un alignement
-                            if (model.aUnAlignement(model.getGrille(), model.getCouleurCachee())) {
-                                mouvementFait = true;
-                            } else {
-                                // restaurer tout
-                                model.restaurerGrille(sauvegarde);
-                                model.restaurerCouleurCachee(sauvegardeCouleur);
-                                model.restaurerResistance(sauvegardeResistance);
-                                model.restaurerVerrous(sauvegardeVerrous);
-                            }
+                            // Calculer le déplacement selon la direction
+                            int ligneOuColonne = modeHorizontal ? ligneSelectionnee : colonneSelectionnee;
+                            int deplacement    = modeHorizontal
+                                    ? Math.round(finalX / CELL_SIZE)
+                                    : Math.round(finalY / CELL_SIZE);
 
                             directionFixee = false;
                             modeHorizontal = false;
-                            enDrag = false;
+                            enDrag         = false;
+
+                            // Déléguer entièrement au Controller
+                            boolean coupAccepte = controller.tenterDeplacement(
+                                    ligneSelectionnee == ligneOuColonne, // horizontal si ligneOuColonne = ligne
+                                    ligneOuColonne,
+                                    deplacement
+                            );
+
                             afficherGrille();
 
-                            if(mouvementFait) {
-                                nbCoups ++;
-                                coups.setText("nombre de coups : " + nbCoups);
+                            if (coupAccepte) {
+                                mettreAJourAffichage();
+                                resoudreEtVerifierFin();
                             }
-
-                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                                boolean continuer = true;
-                                while (continuer) {
-                                    int avant = le_score;
-                                    verifierAlignements();
-                                    continuer = (le_score > avant); // encore des combos ?
-                                }
-                                afficherGrille();
-
-                                // Fin de partie
-                                if (model.aucunCoupPossible()) { // vérification si partie finie
-                                    SharedPreferences prefs = getSharedPreferences("saves", MODE_PRIVATE);
-                                    SharedPreferences.Editor editor = prefs.edit();
-                                    int nb = prefs.getInt("nbParties", 0);
-                                    editor.putLong("seed_" + nb, la_graine);
-                                    editor.putInt("nbParties", nb + 1);
-                                    editor.apply();
-
-                                    AlertDialog dialog = new androidx.appcompat.app.AlertDialog.Builder(this)
-                                            .setTitle("Partie terminée !")
-                                            .setMessage("Aucun coup possible.\nScore final : " + le_score + "\nGraine de la partie : " + la_graine)
-                                            .setPositiveButton("Rejouer", (d, which) -> {
-                                                if (modelDestine) {
-                                                    boolean modeHard = model.isModeHard();
-                                                    model = new GameModel(la_graine, modeHard); // même graine
-                                                } else {
-                                                    model = new GameModel(); // nouvelle graine aléatoire
-                                                    la_graine = model.getGraine();
-                                                }
-                                                le_score = 0;
-                                                nbCoups = 0;
-                                                score.setText("Score : 0");
-                                                coups.setText("nombre de coups : 0");
-                                                afficherGrille();
-                                            })
-                                            .setNegativeButton("Menu", (d, which) -> finish())
-                                            .setCancelable(false)
-                                            .create(); // <== important !
-
-                                    // Fond transparent pour voir la grille derrière
-                                    dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-
-                                    dialog.show();
-                                }
-                            }, 500);
 
                             return true;
                     }
-
                     return false;
-
                 });
                 row.addView(img);
             }
-
             table.addView(row);
         }
-    }
-
-    private int couleurEffective(int i, int j) { //histoire de renvoyer la vraie couleur de la case
-        int val = model.getCase(i, j);
-        if (val == -1 || val == -2) return model.getCouleurCachee(i, j);
-        return val;
-    }
-
-    private int verifierAlignements() {
-        int scoreGagne = 0;
-        boolean aEuSuppresion; //pour aider a la reaction en cascade
-        int combo = 0;
-
-        do {
-            boolean[][] aSupprimer = new boolean[6][6];
-            boolean[][] aResister = new boolean[6][6];
-            aEuSuppresion = false;
-
-            // 1) détecter alignements horizontaux
-            for (int i = 0; i < 6; i++) {
-                int count = 1;
-                for (int j = 1; j < 6; j++) {
-                    if (couleurEffective(i, j) == couleurEffective(i, j - 1)) {
-                        count++;
-                    } else {
-                        if (count >= 3) {
-                            for (int k = 0; k < count; k++) {
-                                int li = i, lj = j - 1 - k;
-                                if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) { //si resistance, la diminue de 1
-                                    aResister[li][lj] = true;
-                                } else
-                                if (model.getCase(li, lj) == -1) {
-                                    model.setCase(li, lj, model.getCouleurCachee(li, lj)); // si mystere, revele la couleur
-                                } else {
-                                    aSupprimer[li][lj] = true; // sinon suppression normale
-                                    model.setVerrou(li, lj, false); // verrou retiré quand la case est éliminée
-                                }
-                            }
-                            int gain = ajouterScore(count);
-
-                            double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                            gain = (int) (gain * bonus);
-
-                            le_score += gain;
-                            score.setText("Score : " + le_score);
-                            aEuSuppresion = true;
-                        }
-                        count = 1;
-                    }
-                }
-                if (count >= 3) {
-                    for (int k = 0; k < count; k++) {
-                        int li = i, lj = 6 - 1 - k;
-                        if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) {
-                            aResister[li][lj] = true;
-                        } else
-                        if (model.getCase(li, lj) == -1) {
-                            model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
-                        } else {
-                            aSupprimer[li][lj] = true; // suppression normale
-                            model.setVerrou(li, lj, false); // verrou retiré quand la case est éliminée
-                        }
-                    }
-                    int gain = ajouterScore(count);
-
-                    double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                    gain = (int) (gain * bonus);
-
-                    le_score += gain;
-                    score.setText("Score : " + le_score);
-                    aEuSuppresion = true;
-                }
-            }
-
-            // 2) détecter alignements verticaux
-            for (int j = 0; j < 6; j++) {
-                int count = 1;
-                for (int i = 1; i < 6; i++) {
-                    if (couleurEffective(i, j) == couleurEffective(i - 1, j)) {
-                        count++;
-                    } else {
-                        if (count >= 3) {
-                            for (int k = 0; k < count; k++) {
-                                int li = i - 1 - k, lj = j;
-                                if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) {
-                                    aResister[li][lj] = true;
-                                } else
-                                if (model.getCase(li, lj) == -1) {
-                                    model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
-                                } else {
-                                    aSupprimer[li][lj] = true; // suppression normale
-                                    model.setVerrou(li, lj, false); // verrou retiré quand la case est éliminée
-                                }
-                            }
-
-                            int gain = ajouterScore(count);
-
-                            double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                            gain = (int) (gain * bonus);
-
-                            le_score += gain;
-                            score.setText("Score : " + le_score);
-                            aEuSuppresion = true;
-                        }
-                        count = 1;
-                    }
-                }
-                if (count >= 3) {
-                    for (int k = 0; k < count; k++) {
-                        int li = 6 - 1 - k, lj = j;
-                        if (model.getCase(li,lj) == -2 && model.getResistance(li,lj) > 0) {
-                            aResister[li][lj] = true;
-                        } else
-                        if (model.getCase(li, lj) == -1) {
-                            model.setCase(li, lj, model.getCouleurCachee(li, lj)); // révèle la couleur cachée
-                        } else {
-                            aSupprimer[li][lj] = true; // suppression normale
-                            model.setVerrou(li, lj, false); // verrou retiré quand la case est éliminée
-                        }
-                    }
-                    int gain = ajouterScore(count);
-
-                    double bonus = 1 + 0.5 * combo; // combo 0 = x1, combo 1 = x1.5, etc.
-                    gain = (int) (gain * bonus);
-
-                    le_score += gain;
-                    score.setText("Score : " + le_score);
-                    aEuSuppresion = true;
-                }
-            }
-
-            // 3a) appliquer les resistances une seule fois
-            for (int i = 0; i < 6; i++) {
-                for (int j = 0; j < 6; j++) {
-                    if (aResister[i][j]) {
-                        model.setResistance(i, j, model.getResistance(i, j) - 1);
-                        if (model.getResistance(i, j) == 0) {
-                            aSupprimer[i][j] = true; // résistance épuisée, on supprime
-                            model.setVerrou(i, j, false); // verrou retiré aussi
-                        }
-                        aEuSuppresion = true;
-                    }
-                }
-            }
-/*
-            // 3b) supprimer les persistantes dont la résistance est déjà 0
-            for (int i = 0; i < 6; i++) {
-                for (int j = 0; j < 6; j++) {
-                    if (model.getCase(i, j) == -2 && model.getResistance(i, j) == 0) {
-                        aSupprimer[i][j] = true;
-                        aEuSuppresion = true;
-                    }
-                }
-            }
-*/
-
-            // 4) faire tomber les cases et remplir les vides
-            if (aEuSuppresion) {
-                for (int j = 0; j < 6; j++) {
-                    int vide = 0;
-                    for (int i = 5; i >= 0; i--) {
-                        if (aSupprimer[i][j]) {
-                            vide++;
-                        } else if (vide > 0) {
-                            int valCase = model.getCase(i, j);
-                            int resist = model.getResistance(i, j);
-
-                            // si c'est une persistante épuisée, on la supprime plutôt que de la déplacer
-                            if (valCase == -2 && resist == 0) {
-                                vide++; // on l'ajoute aux vides
-                            } else {
-                                // déplacer la case vers le bas avec toutes ses données
-                                model.setCase(i + vide, j, valCase);
-                                model.setCouleurCachee(i + vide, j, model.getCouleurCachee(i, j));
-                                model.setResistance(i + vide, j, resist);
-                                model.setVerrou(i + vide, j, model.getVerrou(i, j)); // le verrou suit la case
-                                // vider la case source
-                                model.setCase(i, j, 0);
-                                model.setCouleurCachee(i, j, 0);
-                                model.setResistance(i, j, 0);
-                                model.setVerrou(i, j, false);
-                            }
-                        }
-                    }
-                    // nouvelles cases en haut
-                    for (int i = 0; i < vide; i++) {
-                        int nouvelleCouleur = model.prochaineCouleur(i, j, nbCoups);
-                        model.setCase(i, j, nouvelleCouleur);
-                        if (nouvelleCouleur >= 0) {
-                            // case normale : on remet à zéro
-                            model.setCouleurCachee(i, j, 0);
-                            model.setResistance(i, j, 0);
-                            // le verrou est déjà positionné par prochaineCouleur si besoin
-                        }
-                        // si -1 ou -2 : prochaineCouleur a déjà rempli couleurCachee et resistance, on ne touche pas
-                    }
-                }
-                combo++;
-            }
-        } while (aEuSuppresion);
-        // ajouterScore(scoreGagne);
-        return scoreGagne;
-    }
-
-    private int ajouterScore(int nb) {
-        if (nb == 3) return 8;
-        if (nb == 4) return 16;
-        if (nb == 5) return 32;
-        return 64;
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        GameModel model = controller.getModel();
 
-        // Grille principale
         int[][] grille = model.getGrille();
         for (int i = 0; i < 6; i++) outState.putIntArray("grille_" + i, grille[i]);
 
-        // Couleur cachée et résistances
         for (int i = 0; i < 6; i++) {
             outState.putIntArray("couleurCachee_" + i, model.getCouleurCacheeLigne(i));
-            outState.putIntArray("resistance_" + i, model.getResistanceLigne(i));
+            outState.putIntArray("resistance_" + i,    model.getResistanceLigne(i));
         }
 
-        // Verrous (stockés en int car Bundle ne supporte pas boolean[])
         for (int i = 0; i < 6; i++) {
             boolean[] verrouLigne = model.getVerrouLigne(i);
             int[] verrouInt = new int[6];
@@ -597,12 +272,10 @@ public class MainActivity extends AppCompatActivity {
             outState.putIntArray("verrou_" + i, verrouInt);
         }
 
-        // Score et coups
-        outState.putInt("score", le_score);
-        outState.putInt("nbCoups", nbCoups);
-
-        // Graine et mode hard
-        outState.putLong("graine", la_graine);
+        outState.putInt("score",        controller.getScore());
+        outState.putInt("nbCoups",      controller.getNbCoups());
+        outState.putLong("graine",      controller.getGraine());
         outState.putBoolean("modeHard", model.isModeHard());
+        outState.putBoolean("destine",  controller.isModelDestine());
     }
 }

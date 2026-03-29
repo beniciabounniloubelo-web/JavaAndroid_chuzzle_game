@@ -5,14 +5,14 @@
     android:background="@color/rose_clair"
     android:id="@+id/menu"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context=".MenuActivity"
-    >
+    tools:context=".MenuActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center">
+
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -22,10 +22,7 @@
             android:textSize="40sp"
             android:textColor="@color/black"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="70dp"
-            />
-
-
+            android:layout_marginTop="70dp"/>
 
         <Button
             android:layout_width="wrap_content"
@@ -37,8 +34,8 @@
             android:layout_marginTop="40dp"
             android:backgroundTint="@color/rose_fonce"
             android:textColor="@color/black"
-            android:padding="25dp"
-            />
+            android:padding="25dp"/>
+
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -49,9 +46,20 @@
             android:layout_marginTop="40dp"
             android:backgroundTint="@color/rose_fonce"
             android:textColor="@color/black"
-            android:padding="25dp"
-            />
+            android:padding="25dp"/>
 
+        <!-- Bouton paramètres pour accéder au mode hard -->
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/parametres"
+            android:text="Paramètres"
+            android:fontFamily="@font/gagalin"
+            android:textSize="30sp"
+            android:layout_marginTop="40dp"
+            android:backgroundTint="@color/rose_fonce"
+            android:textColor="@color/black"
+            android:padding="25dp"/>
 
     </LinearLayout>
 
@@ -60,9 +68,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="67dp"
-        android:orientation="horizontal"
-
-        >
+        android:orientation="horizontal">
 
         <Button
             android:id="@+id/regles"
@@ -72,7 +78,8 @@
             android:layout_marginRight="@android:dimen/app_icon_size"
             android:backgroundTint="@color/rose_fonce"
             android:text="Règles du jeu"
-            android:textColor="@color/black" />
+            android:textColor="@color/black"/>
+
     </LinearLayout>
 
 </RelativeLayout>

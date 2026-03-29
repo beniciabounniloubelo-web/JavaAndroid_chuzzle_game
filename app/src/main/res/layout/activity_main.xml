@@ -24,26 +24,15 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:id="@+id/mode"
-        android:text="Mode : Basic"
-        android:fontFamily="@font/gagalin"
-        android:textSize="18sp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="30dp"
-        android:layout_alignParentEnd="true"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         android:id="@+id/score"
         android:text="Score : 0000000"
         android:fontFamily="@font/gagalin"
         android:textSize="26sp"
-
         android:layout_below="@+id/coups"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="12dp"
         android:background="@drawable/score_fond"/>
+
     <!-- Grille principale -->
     <TableLayout
         android:id="@+id/table"
@@ -53,8 +42,72 @@
         android:clipChildren="false"
         android:clipToPadding="false"
         android:padding="4dp"
-        android:gravity="center"
-        />
+        android:gravity="center"/>
 
-    
+    <!-- Bandeau fin de partie (caché par défaut) -->
+    <LinearLayout
+        android:id="@+id/bandeau_fin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical"
+        android:background="#CC000000"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/bandeau_titre"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Partie terminée !"
+            android:textColor="#FFFFFF"
+            android:textSize="22sp"
+            android:fontFamily="@font/gagalin"
+            android:layout_marginBottom="4dp"/>
+
+        <TextView
+            android:id="@+id/bandeau_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:fontFamily="@font/gagalin"
+            android:layout_marginBottom="2dp"/>
+
+        <TextView
+            android:id="@+id/bandeau_graine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="#AAFFFFFF"
+            android:textSize="12sp"
+            android:fontFamily="@font/gagalin"
+            android:layout_marginBottom="12dp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/bandeau_btn_rejouer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rejouer"
+                android:fontFamily="@font/gagalin"
+                android:layout_marginEnd="16dp"/>
+
+            <Button
+                android:id="@+id/bandeau_btn_menu"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Menu"
+                android:fontFamily="@font/gagalin"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
 </RelativeLayout>

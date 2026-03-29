@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/rose_clair">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Règles du jeu"
+            android:fontFamily="@font/gagalin"
+            android:textSize="36sp"
+            android:textColor="@color/black"
+            android:layout_gravity="center"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- But du jeu -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🎯 But du jeu"
+            android:fontFamily="@font/gagalin"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Marquez un maximum de points en alignant des cases de même couleur, jusqu'à ce qu'aucun coup ne soit plus possible."
+            android:textSize="15sp"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- La grille -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🟦 La grille"
+            android:fontFamily="@font/gagalin"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="La grille est composée de 6×6 cases, chacune d'une couleur parmi 7. Au départ, aucune couleur n'apparaît plus de deux fois de suite sur une même ligne ou colonne."
+            android:textSize="15sp"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Les coups -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👆 Les coups"
+            android:fontFamily="@font/gagalin"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Faites glisser une ligne vers la gauche/droite ou une colonne vers le haut/bas. Les cases qui sortent d'un côté réapparaissent de l'autre.\n\nAttention : un coup n'est valide que s'il crée un alignement d'au moins 3 cases de même couleur. Sinon, la grille revient à son état précédent."
+            android:textSize="15sp"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Les alignements -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💥 Les alignements"
+            android:fontFamily="@font/gagalin"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Les cases alignées (3 ou plus) sont retirées. Les cases au-dessus tombent pour combler les vides, et de nouvelles cases apparaissent en haut. Si cela crée de nouveaux alignements, ils sont résolus automatiquement (combo)."
+            android:textSize="15sp"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Les verrous -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🔒 Les verrous"
+            android:fontFamily="@font/gagalin"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Certaines cases peuvent devenir verrouillées. Tant qu'une case verrouillée est présente sur une ligne ou colonne, celle-ci ne peut plus être glissée. Le verrou disparaît quand la case est éliminée par un alignement."
+            android:textSize="15sp"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Le score -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏆 Le score"
+            android:fontFamily="@font/gagalin"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Chaque série rapporte des points selon sa longueur :\n  • 3 cases → 8 pts\n  • 4 cases → 16 pts\n  • 5 cases → 32 pts\n  • 6 cases → 64 pts\n\nBonus combo : +50% par série supplémentaire dans le même coup."
+            android:textSize="15sp"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Mode Hard -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💀 Mode Hard"
+            android:fontFamily="@font/gagalin"
+            android:textSize="20sp"
+            android:textColor="@color/black"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Activable depuis les paramètres. Deux types de cases spéciales apparaissent :\n\n  • Case mystère : sa couleur est cachée.\n  • Case persistante : résiste 3 fois avant d'être éliminée."
+            android:textSize="15sp"
+            android:layout_marginBottom="32dp"/>
+
+        <Button
+            android:id="@+id/btn_retour"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Retour"
+            android:fontFamily="@font/gagalin"
+            android:backgroundTint="@color/rose_fonce"
+            android:textColor="@color/black"/>
+
+    </LinearLayout>
+</ScrollView>

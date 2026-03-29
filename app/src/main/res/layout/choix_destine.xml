@@ -7,13 +7,11 @@
     tools:context=".ListeActivity"
     android:background="@color/rose_clair">
 
-
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Entrer une graine manuellement :"
         android:layout_margin="12dp"/>
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,7 +21,6 @@
         android:layout_marginEnd="12dp"
         android:layout_marginBottom="12dp">
 
-
         <EditText
             android:id="@+id/champ_graine"
             android:layout_width="0dp"
@@ -32,19 +29,26 @@
             android:inputType="number"
             android:hint="Graine..."/>
 
-
         <Button
             android:id="@+id/btn_jouer_graine"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Jouer"/>
+
     </LinearLayout>
 
-
-    <ListView
+    <!-- ScrollView pour que la liste de parties reste scrollable -->
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/liste"/>
+        android:layout_height="match_parent">
 
+        <LinearLayout
+            android:id="@+id/liste_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp"/>
+
+    </ScrollView>
 
 </LinearLayout>
